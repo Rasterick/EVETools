@@ -692,6 +692,13 @@
 
               // Clear both hash and scan_id from URL
               history.replaceState(null, "", window.location.pathname);
+
+               // ---- ADD code to refresh browser completely --- ///
+
+            window.location.reload()
+
+            // ---- END --- //
+
               displayCurrentTimeDate("Analysis Time");
             }
 

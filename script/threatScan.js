@@ -396,6 +396,12 @@
             if (window.location.hash) { 
                  history.pushState("", document.title, window.location.pathname + window.location.search);
             }
+            // ---- ADD code to refresh browser completely --- ///
+
+            window.location.reload()
+
+            // ---- END --- //
+
             displayCurrentTimeDate("Analysis Time"); 
         }
         
