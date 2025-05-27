@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>EVE System Mapper - J121116</title> 
+    <link rel="stylesheet" href="SolarSystemMap.css">
+</head>
+<body>
+    <header id="appHeader">
+        <h1>System Information - J121116</h1>
+    </header>
+
+    <main id="appGridContainer">
+        <div id="mapWindow" class="grid-item">
+            <div id="svgContainer">
+                <svg id="solarSystemSVG" preserveAspectRatio="xMidYMid meet">
+                    
+                </svg>
+                <div id="infoBox"></div> 
+
+            </div>
+            
+        </div>
+
+        <div id="probeInputData" class="grid-item"> 
+            <textarea id="scanDataInput" placeholder="Paste D-Scan or Probe Scan data..."></textarea>
+        </div>
+
+   
+        <div id="buttonPanelGridItem" class="grid-item"> 
+            <div id="buttonPanel"> 
+                <button id="parseScanButton">Parse D-Scan & Select Refs</button>
+                <button id="trilaterateSelectedButton" style="display:none;">Trilaterate Selected (3)</button>
+                <button id="parseProbeDataButton">List Probe Scans</button>
+                <button id="toggleSignatureZonesButton">Toggle Signature Zones</button>
+                <button id="clearScanDataButton">Clear Scan Text</button>
+                <button id="clearMarkersButton">Clear Markers & Lists</button>
+            </div>
+        </div>
+
+        <div id="pointSelection" class="grid-item">
+            <div id="selectableCelestialsContainer"> 
+                <h4>Select 3 Refs: <span id="selectionCount">(0/3)</span></h4>
+                <div id="selectableCelestialsList"></div>
+            </div>
+        </div>
+
+        <div id="plottedLocations" class="grid-item">
+            <h2>Plotted Locations</h2>
+            <div id="plottedMarkersTableContainer">
+                <table id="plottedMarkersTable">
+                    <thead><tr><th>Label</th><th>Type / Notes</th><th>Est. X (AU)</th><th>Est. Z (AU)</th><th>Actions</th></tr></thead>
+                    <tbody id="plottedMarkersTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="spareArea" class="grid-item">
+            <div id="topRightButtonPanel">
+                <button id="futureButton1">(Future) Save State</button>
+                <button id="anotherFutureButton">(Future) Load State</button>
+            </div>
+            <p style="margin-top: auto; color: #555; align-self: center;">Spare Area</p> 
+        </div>
+
+        <div id="probeScanResults" class="grid-item"> 
+            <h2>Probe Scan Results</h2>
+            <div id="probeScanListContainer">
+                <table id="probeScanTable">
+                    <thead><tr><th>ID</th><th>Group</th><th>Name</th><th>Type Detail</th><th>Res %</th><th>Range</th><th>Linked</th><th>Actions</th></tr></thead>
+                    <tbody id="probeScanTableBody"></tbody> 
+                </table>
+            </div>
+        </div>
+
+        <div id="lootEstimation" class="grid-item">
+            <h2>Loot Estimation</h2>
+            <p>(Future Feature)</p>
+        </div>
+
+        <div id="systemInformation" class="grid-item">
+            <h2>System Information</h2>
+            <p>(Future Feature)</p>
+        </div>
+    </main>
+    
+    
+    <script src="SolarSystem.js" defer></script>
+</body>
+</html>

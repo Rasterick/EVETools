@@ -1,0 +1,212 @@
+/* SolarSystemMap.css */
+html, body {
+    height: 100%; margin: 0; font-family: sans-serif;
+    background-color: #181a1b; 
+    color: #c8c8c8; 
+    overflow: hidden; 
+}
+
+body { display: flex; flex-direction: column; }
+
+#appHeader {
+    background-color: #101010; border-bottom: 1px solid #000;
+    color: #00A8FF; 
+    padding: 8px 0; text-align: center; width: 100%; flex-shrink: 0;
+}
+#appHeader h1 { margin: 0; font-size: 20px; font-weight: normal; letter-spacing: 1px; }
+
+#appGridContainer {
+    display: grid;
+    grid-template-columns: minmax(600px, 3fr) minmax(200px, 1fr) minmax(250px, 1.2fr);
+    grid-template-rows: 
+        130px                /* p_input height (probeInputData) */
+        auto                 /* buttons height (buttonPanelGridItem) */
+        minmax(150px, 1fr)   /* selection height (pointSelection) */
+        minmax(200px, 1.5fr) /* plotted height (plottedLocations) */
+        200px;               /* p_results/loot/sysinfo fixed height */
+    grid-template-areas:
+        "map        p_input    spare"
+        "map        buttons    spare"  /* 'buttons' is the grid-area for #buttonPanelGridItem */
+        "map        selection  spare"
+        "map        plotted    spare"
+        "p_results  loot       sysinfo";
+    gap: 8px;
+    padding: 8px;
+    flex-grow: 1; 
+    width: 100%;
+    max-width: 1800px; 
+    margin: 0 auto; 
+    box-sizing: border-box;
+    overflow: hidden;
+    height: calc(100vh - 45px); 
+}
+
+.grid-item {
+    background-color: #202224; 
+    border: 1px solid #101010;
+    padding: 8px;
+    box-sizing: border-box;
+    overflow: hidden; 
+    display: flex; 
+    flex-direction: column; 
+    color: #b0b0b0; 
+}
+.grid-item h2 {
+    margin-top: 0; margin-bottom: 8px; font-size: 14px; text-align: center;
+    background-color: #2d2f32; padding: 5px 0; color: #00A8FF; 
+    flex-shrink: 0; border-bottom: 1px solid #101010;
+}
+.grid-item p { font-size: 12px; margin-top: auto; margin-bottom: auto; text-align: center; color: #666; }
+
+/* --- Assign grid areas to HTML IDs --- */
+#mapWindow { grid-area: map; padding: 0; position:relative; } 
+#probeInputData { grid-area: p_input; } /* Contains the scanDataInput textarea */
+#buttonPanelGridItem { grid-area: buttons; background-color: transparent; border: none; padding: 0; display: flex; justify-content: flex-start; align-items: flex-start;} /* Grid item for buttons */
+#pointSelection { grid-area: selection; }
+#plottedLocations { grid-area: plotted; }
+#spareArea { grid-area: spare; justify-content: space-between; }
+#probeScanResults { grid-area: p_results; } /* This ID is for the whole probe scan section */
+#lootEstimation { grid-area: loot; }
+#systemInformation { grid-area: sysinfo; }
+
+#svgContainer { 
+    width: 850px; 
+    height: 850px; 
+    border: 1px solid #333; 
+    background-color: #02020A; 
+    flex-shrink: 0; 
+    position: relative;
+    padding : 0;
+}
+
+#solarSystemSVG { 
+    width: 100%; 
+    height: 100%; 
+    display: block; 
+}
+
+#probeInputData textarea#scanDataInput { /* Target the specific textarea */
+    width: 100%; height: 100%; box-sizing: border-box; font-family: monospace; 
+    font-size: 11px; background-color: #101010; color: #c8c8c8; 
+    border: 1px solid #444; padding: 5px; resize: none; 
+}
+
+/* This is the inner div that actually holds the buttons */
+#buttonPanel { 
+    display: flex; 
+    flex-direction: column; 
+    gap: 6px; 
+    width:100%; /* Take width of its parent grid cell via #buttonPanelGridItem */
+    max-width: 180px; /* Optional: constrain button panel width */
+}
+#buttonPanel button { 
+    width: 100%; padding: 8px 5px; font-size: 12px; 
+    background-color: #2a2d30; color: #00A8FF; border: 1px solid #101010; 
+    cursor: pointer; text-align: center; box-sizing: border-box;
+}
+#buttonPanel button:hover { background-color: #3a3d40; }
+#trilaterateSelectedButton:disabled { background-color: #222; color: #555; cursor: not-allowed; }
+
+#pointSelection #selectableCelestialsContainer { 
+    width: 100%; height: 100%; margin-top: 0; display: flex; flex-direction: column; 
+    background-color: transparent; padding: 0; border:none; /* Remove default grid-item look if nested */
+}
+#pointSelection #selectableCelestialsContainer h4 { margin-bottom: 5px; font-size: 12px; color: #999; padding: 3px; background-color: #282828; text-align: center;}
+#pointSelection #selectableCelestialsList { flex-grow: 1; overflow-y: auto; border: 1px solid #333; padding: 3px; background-color: #101010;}
+#pointSelection #selectableCelestialsList div.celestial-item { font-size: 11px; padding: 3px; color: #aaa; background-color: #181818; margin-bottom:1px; cursor:pointer;}
+#pointSelection #selectableCelestialsList div.celestial-item:hover { background-color: #282828; }
+#pointSelection #selectableCelestialsList div.celestial-item.selected { background-color: #004D00; color: #99FF99; }
+
+#topRightButtonPanel { display: flex; flex-direction: column; gap: 5px; width: 100%; align-items: flex-end; margin-bottom: 10px; }
+#topRightButtonPanel button { width: 150px; padding: 6px 10px; font-size: 11px; background-color: #2a2d30; color: #00A8FF; border: 1px solid #101010; cursor: pointer; }
+#topRightButtonPanel button:hover { background-color: #3a3d40; }
+
+#plottedMarkersTableContainer, 
+#probeScanListContainer { /* Shared style for table wrappers */
+    width: 100%; flex-grow: 1; overflow-y: auto; border: 1px solid #101010;
+    background-color: #101010; box-sizing: border-box;
+}
+/* Common table styles */
+.table-common { width: 100%; border-collapse: collapse; font-size: 10px; color: #00BFFF; }
+.table-common th, .table-common td { border: 1px solid #1a1a1a; padding: 3px 4px; text-align: left; }
+.table-common th { background-color: #282828; position: sticky; top: 0; z-index: 1; color: #888;}
+.table-common input[type="text"].notes-input { width: 98%; box-sizing: border-box; background-color: #0c0c0c; color: #00BFFF; border: 1px solid #2a2a2a; padding: 2px; font-size: 9px; }
+.table-common button { font-size: 9px; padding: 1px 4px; background-color: #302020; color: #FF8080; border:1px solid #401010; cursor:pointer; }
+.table-common button:hover { background-color: #403030; }
+
+/* Apply common style to tables using IDs */
+#plottedMarkersTable, #probeScanTable {
+    width: 100%; border-collapse: collapse; font-size: 10px; color: #00BFFF; /* EVE Bright Blue for text */
+}
+#plottedMarkersTable th, #plottedMarkersTable td,
+#probeScanTable th, #probeScanTable td { 
+    border: 1px solid #1a1a1a; padding: 3px 4px; text-align: left; 
+}
+#plottedMarkersTable th, #probeScanTable th { 
+    background-color: #282828; position: sticky; top: 0; z-index: 1; color: #888;
+}
+#plottedMarkersTable input[type="text"].notes-input, 
+#probeScanTable input[type="text"].notes-input { /* Not used in probe table yet */
+    width: 98%; box-sizing: border-box; background-color: #0c0c0c; 
+    color: #00BFFF; border: 1px solid #2a2a2a; padding: 2px; font-size: 9px; 
+}
+#plottedMarkersTable button.delete-marker-button, 
+#probeScanTable button.link-marker-button { /* Combined styling for action buttons */
+    font-size: 9px; padding: 1px 4px; background-color: #302020; 
+    color: #FF8080; border:1px solid #401010; cursor:pointer; 
+}
+#plottedMarkersTable button.delete-marker-button:hover,
+#probeScanTable button.link-marker-button:hover { 
+    background-color: #403030; 
+}
+
+
+#plottedMarkersTable td:nth-child(3), /* Est X */
+#plottedMarkersTable td:nth-child(4) { /* Est Z */
+    text-align: right; white-space: nowrap;
+}
+#probeScanTable td:nth-child(5), /* Res % */
+#probeScanTable td:nth-child(6) { /* Range */
+    text-align: right; white-space: nowrap;
+}
+#probeScanTable tr.res-green td { color: #33FF33; }
+#probeScanTable tr.res-yellow td { color: #FFFF66; }
+#probeScanTable tr.res-red td { color: #FF6666; }
+
+#infoBox { 
+   position: absolute; /* Now absolute to its nearest positioned ancestor (svgContainer) */
+    bottom: 10px;       /* 10px from the bottom of svgContainer */
+    right: 10px;        /* 10px from the right of svgContainer */
+    background-color: rgba(30, 30, 35, 0.95); 
+    color: #c8c8c8; 
+    padding: 10px; 
+    border-radius: 3px; 
+    max-width: 200px; /* Adjusted max-width */
+    pointer-events: none; 
+    opacity: 0; 
+    transition: opacity 0.2s ease-in-out; /* Simpler transition */
+    font-size: 11px; 
+    white-space: normal; /* Allow text to wrap */
+    border: 1px solid #00A8FF;
+    z-index: 100;
+}
+
+#infoBox.visible { opacity: 1; }
+
+.scanner-marker-cross line { 
+    stroke: #FFCC00; 
+    stroke-width: 2;
+ }
+
+.scanner-marker-label { 
+    fill: #FFCC00; 
+    font-size: 9px; 
+    text-anchor: start; 
+    dominant-baseline: middle; 
+    cursor: pointer; 
+}
+
+.signature-zone-circle { fill: rgba(0, 168, 255, 0.02); 
+    stroke: rgba(0, 168, 255, 0.1); 
+    stroke-width: 0.001; 
+    pointer-events: none; }
