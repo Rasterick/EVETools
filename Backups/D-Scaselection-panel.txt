@@ -1,0 +1,13 @@
+<div id="pointSelection" class="grid-item">
+  <h2>Select 3 Refs: <span id="selectionCount">(0/3)</span></h2>
+      <div id="dScanSelectionPanel" class="grid-item">
+        <div id="selectableCelestialsContainer"
+          style="width: 100%; height: 10%; display: none">
+        </div>
+          
+          <div id="selectableCelestialsList">
+
+          </div>
+        </div>
+    </div>
+</div>

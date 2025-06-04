@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>EVE System Mapper - J121116</title>
+    <link rel="stylesheet" href="style/SolarSystemMap.css" />
+    <!-- If you use TinyColor.js for custom marker colors -->
+    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/tinycolor/1.6.0/tinycolor.min.js"></script> -->
+  </head>
+  <body>
+    <header id="appHeader">
+      <h1 id="currentSystemTitleHeader">System Information - J121116</h1>
+      <div id="systemSelectionControlsHeader">
+        <input
+          type="text"
+          id="systemIdInput"
+          placeholder="Enter System Name (e.g., J121116)"
+        />
+        <button id="loadSystemButton">Load System</button>
+      </div>
+    </header>
+
+    <main id="appGridContainer">
+      <div id="mapWindow" class="grid-item">
+        <div id="svgContainer">
+          <svg id="solarSystemSVG" preserveAspectRatio="xMidYMid meet"></svg>
+        </div>
+      </div>
+
+      <div id="probeInputData" class="grid-item">
+        <textarea
+          id="scanDataInput"
+          placeholder="Paste D-Scan or Probe Scan data..."
+        ></textarea>
+      </div>
+
+      <div id="buttonPanelGridItem" class="grid-item">
+        <div id="buttonPanel">
+          <button id="parseScanButton">Parse D-Scan & Select Refs</button>
+          <button id="trilaterateSelectedButton" style="display: none">
+            Trilaterate Selected (3)
+          </button>
+          <button id="parseProbeDataButton">List Probe Scans</button>
+          <button id="toggleSignatureZonesButton">
+            Toggle Signature Zones
+          </button>
+          <button id="clearScanDataButton">Clear Scan Text</button>
+          <button id="clearMarkersButton">Clear Markers & Lists</button>
+        </div>
+      </div>
+
+     
+  <div id="pointSelection" class="grid-item">
+    <h2>Select 3 Refs: <span id="selectionCount">(0/3)</span></h2>
+      <div id="dScanSelectionPanel" class="grid-item">
+        <div id="selectableCelestialsList">
+
+          </div>
+            <div id="selectableCelestialsContainer" 
+              style="width: 100%; height: 10%; display: none">
+            </div>
+      </div>  
+  </div>
+
+
+      
+  <div id="spareArea" class="grid-item">
+       <div id="threatAnlysis" class="grid-item">
+        <h2>Threat Analysis</h2> 
+        <div id="topRightButtonPanel" style="margin-top: auto">
+          
+          
+</div>
+
+        </div>
+      </div>
+
+
+      
+<div id="#ScanResults" class="grid-item">
+        <h2>Probe Scan Results</h2>
+        <div id="probeScanListContainer">
+          <table id="probeScanTable">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Group</th>
+                <th>Name</th>
+                <th>Type Detail</th>
+                <th>Res %</th>
+                <th>Range</th>
+                <th>Linked</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="probeScanTableBody"></tbody>
+          </table>
+        </div>
+</div>
+ 
+<div>
+
+<div id="systemInformation" class="grid-item">
+<h2>Add Custom Markers</h2>
+<div id="customMarkerControlsContainer">
+  <div> <button id="prepareCustomMarkerButton">Add Custom Marker</button>
+  </div>
+          
+  <div id="customMarkerControls" style="display: none">
+            <h4>Create Custom Marker</h4>
+            <div>
+              <label for="markerShape">Shape:</label>
+              <select id="markerShape">
+                <option value="cross">Cross (+)</option>
+                <option value="circle" selected>Circle (O)</option>
+                <option value="square">Square ([])</option>
+                <option value="diamond">Diamond (<>)</option>
+                <option value="triangle_up">Triangle (Up ^)</option>
+              </select>
+            </div>
+            <div>
+              <label for="markerColor">Color:</label>
+              <select id="markerColor">
+                <option value="red" style="background-color: red; color: white">
+                  Red
+                </option>
+                <option value="lime" style="background-color: lime">
+                  Lime
+                </option>
+                <option
+                  value="blue"
+                  style="background-color: blue; color: white"
+                >
+                  Blue
+                </option>
+                <option
+                  value="yellow"
+                  style="background-color: yellow; color: black"
+                >
+                  Yellow
+                </option>
+                <option
+                  value="cyan"
+                  style="background-color: cyan; color: black"
+                >
+                  Cyan
+                </option>
+                <option value="magenta" style="background-color: magenta">
+                  Magenta
+                </option>
+                <option
+                  value="white"
+                  style="background-color: white; color: black"
+                >
+                  White
+                </option>
+                <option value="orange" style="background-color: orange">
+                  Orange
+                </option>
+              </select>
+            </div>
+            <p
+              id="customMarkerInstructions"
+              style="font-size: 10px; color: #888"
+            >
+              Click on map to place. Edit label after.
+            </p>
+            <button id="cancelCustomMarkerButton">Cancel Adding</button>
+          </div>
+</div>
+</div>
+</div>
+
+
+</div>
+ <div id="plottedLocations" class="grid-item">
+        <h2>Plotted Locations</h2>
+        <div id="plottedMarkersTableContainer">
+          <table id="plottedMarkersTable">
+            <thead>
+              <tr>
+                <th>Label</th>
+                <th>Type / Notes</th>
+                <th>Est. X (AU)</th>
+                <th>Est. Z (AU)</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="plottedMarkersTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+        
+      <div id="systemInformation" class="grid-item">
+        <h2>System Information</h2>
+        <div id="systemDetailsBox">
+          <p><strong>Class:</strong> <span id="sysClass">N/A</span></p>
+          <p><strong>Effect:</strong> <span id="sysEffect">N/A</span></p>
+          <p><strong>Static 1:</strong> <span id="sysStatic1">N/A</span></p>
+          <p><strong>Static 2:</strong> <span id="sysStatic2">N/A</span></p>
+        </div>
+      </div>
+    </main>
+
+    <div id="infoBox"></div>
+    <script src="script/SolarSystem.js" defer></script>
+  </body>
+</html>

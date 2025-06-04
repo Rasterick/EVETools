@@ -1,0 +1,4 @@
+CKF-110	Cosmic Anomaly	Ore Site	Infrequent Core Deposit	100.0%	10.80 AU
+KRG-668	Cosmic Signature	Wormhole	Unstable Wormhole	100.0%	8.55 AU
+NTS-891	Cosmic Signature	Wormhole	Unstable Wormhole	100.0%	1,100 km
+YAB-516	Cosmic Signature	Wormhole	Unstable Wormhole	100.0%	7.12 AU

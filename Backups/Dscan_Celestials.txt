@@ -1,0 +1,14 @@
+639	C5 Ratter	Tempest	-
+35835	J121116 - Murder Mittens	Athanor	4.3 AU
+35833	J121116 - PawHub	Fortizar	4.3 AU
+45041	J121116 - Star	Sun K3 (Yellow Small)	11.3 AU
+35825	J121116 - Toe Beans	Raitaru	4.3 AU
+2016	J121116 I	Planet (Barren)	11.1 AU
+2015	J121116 II	Planet (Lava)	10.7 AU
+2016	J121116 III	Planet (Barren)	11.5 AU
+2016	J121116 IV	Planet (Barren)	12.5 AU
+2017	J121116 V	Planet (Storm)	9.6 AU
+11	J121116 VI	Planet (Temperate)	9.5 AU
+2014	J121116 VIII	Planet (Oceanic)	4.3 AU
+16240	Salvalyst	Catalyst	-
+644	Unknown	Typhoon	-

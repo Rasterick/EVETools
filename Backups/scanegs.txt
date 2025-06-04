@@ -1,0 +1,153 @@
+CSU-404	Cosmic Signature			0.0%	4.54 AU
+DBM-377	Cosmic Signature			0.0%	2.61 AU
+DOC-162	Cosmic Anomaly	Combat Site	Core Garrison	100.0%	2.12 AU
+JKS-758	Cosmic Anomaly	Combat Site	Core Stronghold	100.0%	3.79 AU
+KES-540	Cosmic Anomaly	Combat Site	Core Garrison	100.0%	3.25 AU
+KTT-748	Cosmic Anomaly	Combat Site	Core Stronghold	100.0%	3.33 AU
+LMQ-972	Cosmic Signature			0.0%	4.06 AU
+MFU-190	Cosmic Anomaly	Combat Site	Core Stronghold	100.0%	12.60 AU
+MLB-272	Cosmic Anomaly	Combat Site	Quarantine Area	100.0%	4.32 AU
+NEK-515	Cosmic Signature			0.0%	4.74 AU
+NRJ-676	Cosmic Anomaly	Combat Site	Core Stronghold	100.0%	19.63 AU
+OAH-612	Cosmic Anomaly	Combat Site	Core Garrison	100.0%	4.21 AU
+OQT-656	Cosmic Anomaly	Combat Site	Core Garrison	100.0%	3.54 AU
+SLI-120	Cosmic Anomaly	Combat Site	Oruze Osobnyk	100.0%	19.64 AU
+TDL-018	Cosmic Anomaly	Ore Site	W-Space Blue A0 Rare Asteroids	100.0%	59 km
+TTA-089	Cosmic Anomaly	Combat Site	Core Garrison	100.0%	1.43 AU
+VTA-764	Cosmic Signature			0.0%	6.38 AU
+VXX-984	Cosmic Anomaly	Combat Site	Core Stronghold	100.0%	4.12 AU
+WWI-924	Cosmic Anomaly	Combat Site	Quarantine Area	100.0%	11.65 AU
+ZMU-344	Cosmic Anomaly	Combat Site	Quarantine Area	100.0%	5.77 AU
+
+22544	All The Same, I Saw It First	Hulk	23 km
+22544	KAF - Excavator	Hulk	1,792 m
+22544	KGF - Excavator	Hulk	1,004 m
+22544	M-G'ulper	Hulk	4,534 m
+26888	Mobile Large Warp Disruptor II	Mobile Large Warp Disruptor II	-
+22544	OGF - Excavator	Hulk	1,203 m
+32880	Rocky Adventure	Venture	30 km
+22544	SATAN	Hulk	801 m
+22544	SATAN	Hulk	874 m
+22544	SATAN	Hulk	2,829 m
+22544	SATAN	Hulk	3,108 m
+22544	SATAN	Hulk	3,213 m
+22544	SATAN	Hulk	3,077 m
+22544	SATAN	Hulk	1,575 m
+22544	SATAN	Hulk	1,479 m
+22544	SATAN	Hulk	1,266 m
+42244	TYF - Skavontas	Porpoise	2,049 m
+22544	Unknown	Hulk	24 km
+22544	Unknown	Hulk	24 km
+22544	Unknown	Hulk	3,071 m
+
+
+
+BAA-331	Cosmic Anomaly	Combat Site	Frontier Barracks	100.0%	11.54 AU
+BBQ-853	Cosmic Anomaly	Combat Site	Frontier Barracks	100.0%	3.39 AU
+BPP-240	Cosmic Signature			0.0%	28.33 AU
+CAG-634	Cosmic Anomaly	Combat Site	Frontier Command Post	100.0%	3.63 AU
+CGA-850	Cosmic Anomaly	Combat Site	Integrated Terminus	100.0%	12.88 AU
+CJW-008	Cosmic Anomaly	Combat Site	Frontier Barracks	100.0%	14.09 AU
+CLS-512	Cosmic Anomaly	Ore Site	Average Frontier Deposit	100.0%	4.13 AU
+ECH-564	Cosmic Anomaly	Combat Site	Frontier Barracks	100.0%	6.14 AU
+EZG-764	Cosmic Anomaly	Combat Site	Frontier Command Post	100.0%	4.90 AU
+FGO-499	Cosmic Anomaly	Combat Site	Frontier Barracks	100.0%	3.97 AU
+FNH-614	Cosmic Anomaly	Combat Site	Frontier Barracks	100.0%	12.89 AU
+FRH-270	Cosmic Anomaly	Combat Site	Frontier Command Post	100.0%	3.87 AU
+HNB-696	Cosmic Anomaly	Combat Site	Frontier Barracks	100.0%	13.13 AU
+IHX-358	Cosmic Anomaly	Combat Site	Frontier Barracks	100.0%	13.72 AU
+IIN-272	Cosmic Anomaly	Combat Site	Frontier Barracks	100.0%	13.03 AU
+JDN-709	Cosmic Signature			100%	25.59 AU
+JNJ-666	Cosmic Anomaly	Combat Site	Frontier Barracks	100.0%	6.28 AU
+JNS-256	Cosmic Anomaly	Combat Site	Frontier Command Post	100.0%	13.55 AU
+KDI-080	Cosmic Anomaly	Combat Site	Frontier Barracks	100.0%	5.73 AU
+KND-856	Cosmic Anomaly	Combat Site	Frontier Command Post	100.0%	12.93 AU
+KXG-320	Cosmic Anomaly	Combat Site	Sleeper Information Sanctum	100.0%	25.41 AU
+LIT-823	Cosmic Anomaly	Ore Site	Average Frontier Deposit	100.0%	15.02 AU
+LIU-776	Cosmic Anomaly	Combat Site	Frontier Barracks	100.0%	11.35 AU
+LTM-585	Cosmic Signature			0.0%	5.75 AU
+MAK-804	Cosmic Anomaly	Combat Site	Frontier Barracks	100.0%	12.11 AU
+NYA-525	Cosmic Signature			0.0%	15.10 AU
+NZB-001	Cosmic Anomaly	Combat Site	Sleeper Information Sanctum	100.0%	14.52 AU
+OJG-600	Cosmic Anomaly	Combat Site	Frontier Command Post	100.0%	10.18 AU
+OJH-824	Cosmic Anomaly	Combat Site	Sleeper Information Sanctum	100.0%	12.95 AU
+PCS-949	Cosmic Anomaly	Combat Site	Frontier Barracks	100.0%	5.10 AU
+PVY-799	Cosmic Anomaly	Combat Site	Frontier Barracks	100.0%	12.36 AU
+PYT-259	Cosmic Signature			0.0%	5.35 AU
+QCR-424	Cosmic Anomaly	Combat Site	Frontier Command Post	100.0%	4.21 AU
+RYG-288	Cosmic Anomaly	Combat Site	Frontier Command Post	100.0%	4.45 AU
+SEA-430	Cosmic Anomaly	Combat Site	Frontier Barracks	100.0%	7.03 AU
+TPT-315	Cosmic Anomaly	Combat Site	Sleeper Information Sanctum	100.0%	12.56 AU
+UVX-076	Cosmic Anomaly	Combat Site	Sleeper Information Sanctum	100.0%	5.67 AU
+VXP-297	Cosmic Signature			0.0%	8.96 AU
+ZXQ-057	Cosmic Anomaly	Combat Site	Sleeper Information Sanctum	100.0%	12.94 AU
+
+
+33520	Flycatcher	'Wetu' Mobile Depot	-
+49710	I Said, I've Got A Big Stick	Kikimora	3,301 m
+49710	Jumping Spider	Kikimora	3,129 m
+49710	Jumping spider	Kikimora	3,265 m
+37483	KGF - Thaumaturge	Magus	1,390 m
+11371	M-Wolf PO	Wolf	1,420 m
+22464	TYF - Confiner	Flycatcher	1,364 m
+49710	⋋◥◣ ⌢ ◢◤⋌	Kikimora	2,868 m
+49710	⋘✞⋙ Kaka	Kikimora	1,565 m
+
+JHOME at 1621 26/05/2025 From Y Ping
+35835	J121116 - Murder Mittens	Athanor	13.4 AU
+35833	J121116 - PawHub	Fortizar	13.4 AU
+35825	J121116 - Toe Beans	Raitaru	13.4 AU
+2016	J121116 I	Planet (Barren)	6.3 AU
+2015	J121116 II	Planet (Lava)	6.8 AU
+2016	J121116 III	Planet (Barren)	6.6 AU
+2016	J121116 IV	Planet (Barren)	5.5 AU
+2017	J121116 V	Planet (Storm)	7.9 AU
+11	J121116 VI	Planet (Temperate)	8.0 AU
+11	J121116 VII	Planet (Temperate)	4.4 AU
+2014	J121116 VIII	Planet (Oceanic)	13.4 AU
+30488	Scanner Probe	Sisters Core Scanner Probe	-
+30488	Scanner Probe	Sisters Core Scanner Probe	-
+30488	Scanner Probe	Sisters Core Scanner Probe	-
+30488	Scanner Probe	Sisters Core Scanner Probe	-
+30488	Scanner Probe	Sisters Core Scanner Probe	-
+30488	Scanner Probe	Sisters Core Scanner Probe	-
+30488	Scanner Probe	Sisters Core Scanner Probe	-
+30488	Scanner Probe	Sisters Core Scanner Probe	-
+
+JHOME at 1621 26/05/2025 From Z Ping
+33697	100% a Loki	Prospect	-
+33697	100% a Tengu	Prospect	-
+32880	Aerocky Aedventure	Venture	-
+35835	J121116 - Murder Mittens	Athanor	8.8 AU
+35833	J121116 - PawHub	Fortizar	8.8 AU
+35825	J121116 - Toe Beans	Raitaru	8.8 AU
+2016	J121116 I	Planet (Barren)	3.0 AU
+2015	J121116 II	Planet (Lava)	3.2 AU
+2016	J121116 III	Planet (Barren)	2.3 AU
+2016	J121116 IV	Planet (Barren)	2.9 AU
+2017	J121116 V	Planet (Storm)	2.8 AU
+11	J121116 VI	Planet (Temperate)	5.2 AU
+11	J121116 VII	Planet (Temperate)	7.7 AU
+2014	J121116 VIII	Planet (Oceanic)	8.8 AU
+30488	Scanner Probe	Sisters Core Scanner Probe	69 km
+30488	Scanner Probe	Sisters Core Scanner Probe	-
+30488	Scanner Probe	Sisters Core Scanner Probe	-
+30488	Scanner Probe	Sisters Core Scanner Probe	-
+30488	Scanner Probe	Sisters Core Scanner Probe	-
+30488	Scanner Probe	Sisters Core Scanner Probe	-
+30488	Scanner Probe	Sisters Core Scanner Probe	-
+30488	Scanner Probe	Sisters Core Scanner Probe	-
+
+JHOME at 1621 26/05/2025 From Z Ping - ZZZ - Special Safe
+35835	J121116 - Murder Mittens	Athanor	7.5 AU
+35833	J121116 - PawHub	Fortizar	7.5 AU
+35825	J121116 - Toe Beans	Raitaru	7.5 AU
+2016	J121116 I	Planet (Barren)	4.7 AU
+2015	J121116 II	Planet (Lava)	4.5 AU
+2016	J121116 III	Planet (Barren)	4.1 AU
+2016	J121116 IV	Planet (Barren)	5.2 AU
+2017	J121116 V	Planet (Storm)	3.4 AU
+11	J121116 VI	Planet (Temperate)	6.1 AU
+11	J121116 VII	Planet (Temperate)	10.2 AU
+2014	J121116 VIII	Planet (Oceanic)	7.5 AU
+

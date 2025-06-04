@@ -1,0 +1,592 @@
+/* SolarSystemMap.css */
+html, body {
+    height: 100%; margin: 0; 
+    font-family: sans-serif;
+    background-color: #181a1b; 
+    color: #c8c8c8; 
+    overflow: hidden; 
+    /*background-image: url('https://gpi-services.co.uk/images/Background.jpg'); */ /* Uncomment to use background image */
+}
+
+body { 
+    display: flex; 
+    flex-direction: column; 
+    height: 100vh; }
+
+#appHeader {
+    background-color: #101010; 
+    border-bottom: 1px solid #000;
+    color: #00A8FF; 
+    padding: 5px 15px; 
+    width: 100%; 
+    flex-shrink: 0; 
+    box-sizing: border-box; 
+    display: flex;
+    justify-content: space-between; 
+    align-items: center;
+}
+#appHeader h1#currentSystemTitleHeader {
+    margin: 0; 
+    font-size: 18px; 
+    font-weight: normal; 
+    letter-spacing: 1px;
+    white-space: nowrap; 
+    overflow: hidden; 
+    text-overflow: ellipsis; 
+    flex-grow: 1;
+}
+#systemSelectionControlsHeader { 
+    display: flex; 
+    align-items: center; 
+    gap: 8px; 
+    flex-shrink: 0; 
+}
+
+#systemSelectionControlsHeader input[type="text"]#systemIdInput {
+    padding: 6px 8px; 
+    font-size: 12px; 
+    background-color: #2a2d30; 
+    color: #c8c8c8; 
+    border: 1px solid #101010; 
+    border-radius: 3px;
+    width: 180px; 
+    box-sizing: border-box;
+}
+#systemSelectionControlsHeader button#loadSystemButton {
+    padding: 6px 12px; 
+    font-size: 12px; 
+    cursor: pointer;
+    background-color: #005f88; 
+    color: #fff; 
+    border: 1px solid #003c56; 
+    border-radius: 3px; 
+    box-sizing: border-box; 
+    text-align: center; 
+    white-space: nowrap;
+}
+
+#systemSelectionControlsHeader button#loadSystemButton:hover { background-color: #0077a9; }
+
+#appGridContainer {
+    display: grid;
+    grid-template-columns: minmax(60px, 1fr) minmax(220px, .5fr) minmax(250px, 1.2fr); /* Map | Controls | Spare/Info */
+    
+    /* --- ADJUSTED ROW DEFINITIONS --- */
+    grid-template-rows: 
+        minmax(100px, auto)   /* Row 1: probeInputData (p_input) - Takes height of content, min 100px */
+        minmax(150px, auto)                  /* Row 2: buttons (buttonPanelGridItem) - Takes height of content */
+        minmax(100px, auto)                   /* Row 3: pointSelection - Takes 1 share of flexible space */
+        minmax(200px, 30vh)  /* Row 5: Bottom row (p_results, loot, sysinfo) */
+        minmax(200px, 30vh);  /* Row 6: Bottom row (p_results, loot, sysinfo) */
+
+    grid-template-areas: /* Assign areas to cells */
+        "map        p_input     spare"
+        "map        buttons     spare"
+        "map        selection   spare"  
+        "map        plotted     spare"  
+        "p_results  dscan_selection_panel        sysinfo"; /* 'map' now clearly spans the 4 rows where controls are */
+
+    gap: 8px;
+    padding: 8px;
+    flex-grow: 1; 
+    width: 100%;
+    max-width: 1800px; 
+    margin: 0 auto; 
+    box-sizing: border-box;
+    overflow: auto; 
+    height: calc(100vh - 45px - 16px); 
+
+#probeScanListContainer {
+    width: 100%; 
+    flex-grow: 1; /* Allows it to take available vertical space in its parent #probeScanResults */
+    overflow-y: auto; /* THIS ADDS THE SCROLLBAR when content overflows */
+    border: 1px solid #101010;
+    background-color: #101010; 
+    box-sizing: border-box;
+    min-height: 10px; /* Give it some minimum height to ensure it's visible */
+    
+}
+
+/* Also, ensure its parent grid item can let it grow */
+#probeScanResults { 
+    grid-area: p_results; 
+    display: flex;    
+    flex-direction: column;
+    overflow: auto; /* The grid item itself shouldn't scroll, its child container should */
+    
+}
+
+}
+
+.grid-item {
+    background-color: #202224; 
+    border: 1px solid #101010;
+    padding: 8px; 
+    box-sizing: border-box;
+    /* overflow: hidden;8? -- Made it scrollable */ 
+    display: flex; 
+    flex-direction: column; 
+    color: #b0b0b0;
+    overflow-y: auto;
+    font-size: 10px;
+}
+.grid-item h2 {
+    margin-top: 0; 
+    margin-bottom: 8px; 
+    font-size: 14px; 
+    text-align: center;
+    background-color: #2d2f32; 
+    padding: 5px 0; 
+    color: #00A8FF;
+    flex-shrink: 0; 
+    border-bottom: 1px solid #101010;
+}
+
+.grid-item > p { 
+    font-size: 12px; 
+    margin: auto; 
+    text-align: center; 
+    color: #666; 
+} /* Target direct p child */
+
+/* Grid Area Assignments */
+#mapWindow { 
+    grid-area: map; 
+    padding: 0; 
+    position:relative; 
+    display: flex; 
+}
+
+#probeInputData { 
+    grid-area: p_input; 
+}
+
+#buttonPanelGridItem { 
+    grid-area: buttons; 
+    background-color: transparent; 
+    border: none; 
+    padding: 0; 
+}
+/*#pointSelection { grid-area: selection; }*/
+
+/*#plottedLocations { 
+    grid-area: plotted; /* #pointSelection uses this */
+    /* #plottedLocations will use its own grid-area name from below 
+    display: flex;    
+    flex-direction: column;
+    overflow: hidden; /* Parent grid item hides overflow, child container scrolls 
+}*/
+
+#plottedLocations { grid-area: plotted; } /* Assign grid area */
+
+#spareArea {
+     grid-area: spare; 
+     justify-content: space-between; 
+     align-items: flex-start;
+    } /* Align content to top */
+
+#probeScanResults { 
+    grid-area: p_results; 
+    
+} 
+
+#dScanSelectionPanel  #selectableCelestialsContainer{ 
+    width: 100%; 
+    height: 100%; 
+    margin-top: 0; 
+    display: none; /* JS controls visibility */
+    flex-direction: column; 
+    background-color: #1f1f1f; /* Panel background */
+    padding: 8px; 
+    border: 1px solid #333;
+    border-radius: 3px;
+    box-sizing: border-box;
+      
+}
+
+#dScanSelectionArea #selectableCelestialsContainer h4 { 
+    margin-top: 0; 
+    margin-bottom: 5px; 
+    font-size: 10; color: #00A8FF; 
+    padding-bottom: 3px; 
+    border-bottom: 1px solid #444;
+    text-align: 
+    left; flex-shrink: 0;
+    
+}
+
+#dScanSelectionArea #selectableCelestialsList { 
+    flex-grow: 1; 
+    overflow-y: auto; 
+    border: 1px solid #333; 
+    padding: 3px; 
+    background-color: #101010; 
+    min-height: 200px; /* Ensure it has good height */
+
+}
+
+#dScanSelectionArea #selectableCelestialsList div.celestial-item { 
+    font-size: 10px; 
+    padding: 3px;
+    color: #aaa; 
+    background-color: #181818; 
+    margin-bottom:1px; 
+    cursor:pointer;
+    
+}
+
+#dScanSelectionArea #selectableCelestialsList div.celestial-item:hover { 
+    background-color: #282828; 
+}
+
+#dScanSelectionArea #selectableCelestialsList div.celestial-item.selected { 
+    background-color: #004D00; 
+    color: #99FF99; 
+    font-weight: bold; 
+        overflow-y: auto; /* THIS ADDS THE SCROLLBAR when content overflows */
+}
+
+#systemInformation { 
+    grid-area: sysinfo; 
+}
+
+
+#svgContainer { 
+    width: 100%; 
+    height: 100%; 
+    background-color: #02020A; 
+    flex-grow:1; 
+    position:relative;
+}
+
+#solarSystemSVG { 
+    width: 100%; 
+    height: 100%; 
+    display: block; 
+}
+
+#probeInputData textarea#scanDataInput { 
+    width: 100%; 
+    height: 100%; 
+    min-height: 80px; 
+    box-sizing: border-box; 
+    font-family: monospace; 
+    font-size: 11px; 
+    background-color: #101010; 
+    color: #c8c8c8; 
+    border: 1px solid #444; 
+    padding: 5px; 
+    resize: vertical; 
+}
+
+#buttonPanel { 
+    display: flex; 
+    flex-direction: column; 
+    gap: 6px; 
+    width:100%;
+}
+
+#buttonPanel button { 
+    width: 100%; 
+    padding: 8px 5px; 
+    font-size: 12px; 
+    background-color: #2a2d30; 
+    color: #00A8FF; 
+    border: 1px solid #101010; 
+    cursor: pointer; 
+    text-align: center; 
+    box-sizing: border-box;
+}
+
+#buttonPanel button:hover { 
+    background-color: #3a3d40; 
+}
+
+#trilaterateSelectedButton:disabled { 
+    background-color: #222; 
+    color: #555; 
+    cursor: not-allowed; 
+}
+
+#pointSelection #selectableCelestialsContainer { 
+    width: 100%; 
+    height: 100%; 
+    margin-top: 0; 
+    display: none; /* JS controls visHibility by changing to 'flex' */
+    flex-direction: column; 
+    background-color: transparent; 
+    padding: 0px; 
+    border:none; 
+    font-size: 10px;
+}
+
+#pointSelection #selectableCelestialsContainer h4 { 
+    /* ... existing h4 styles ... */
+    flex-shrink: 0; /* Prevent h4 from shrinking */
+    height: 0%;
+}
+
+#pointSelection #selectableCelestialsList { 
+    flex-grow: 1; /* List takes available vertical space in its container */
+    overflow-y: auto; /* ADD SCROLLBAR */
+    border: 1px solid #333; padding: 3px; 
+    background-color: #101010; 
+    min-height: 500px; /* Ensure it has enough space to show a few items */ 
+
+}
+#pointSelection #selectableCelestialsList div.celestial-item { 
+    font-size: 10x; 
+    padding: 3px; 
+    color: #aaa; 
+    background-color: #181818; 
+    margin-bottom:1px; 
+    cursor:pointer;
+}
+
+#pointSelection #selectableCelestialsList div.celestial-item:hover {        
+    background-color: #282828; 
+}
+
+#pointSelection #selectableCelestialsList div.celestial-item.selected {     background-color: #004D00; 
+    color: #99FF99;
+    font-weight: bold; 
+}
+
+#topRightButtonPanel { 
+    display: flex; 
+    flex-direction: column; 
+    gap: 5px; width: 100%; /* align-items: flex-end; */ 
+    margin-bottom: 10px; 
+} /* Let buttons take full width */
+
+#topRightButtonPanel button { 
+    width: 100%; 
+    padding: 6px 10px; 
+    font-size: 11px; 
+    background-color: #2a2d30; 
+    color: #00A8FF; 
+    border: 1px solid #101010; 
+    cursor: pointer; 
+}
+
+#topRightButtonPanel button:hover { 
+    background-color: #3a3d40; 
+}
+
+#customMarkerControls { /* Styles for the custom marker controls in #spareArea */
+    display: none; 
+    flex-direction: column; 
+    gap: 8px; 
+    padding: 10px;
+    background-color: #2d2f32; 
+    border: 1px solid #101010;
+    border-radius: 4px; 
+    margin-bottom: 10px; 
+    width: 100%; 
+    box-sizing: border-box;
+}
+
+#customMarkerControls h4 { 
+    margin: 0 0 8px 0; 
+    font-size: 13px; 
+    color: #00A8FF; 
+    text-align: center; 
+    padding-bottom: 5px; 
+    border-bottom: 1px solid #444;
+}
+
+#customMarkerControls div { 
+    display: flex; 
+    align-items: center; 
+    gap: 5px; 
+}
+
+#customMarkerControls label { 
+    font-size: 11px; 
+    width: 50px; 
+    flex-shrink: 0; 
+}
+
+#customMarkerControls select, #customMarkerControls input[type="color"] {
+    flex-grow: 1; 
+    padding: 4px; 
+    background-color: #1a1a1a; 
+    color: #c8c8c8;
+    border: 1px solid #444; 
+    border-radius: 2px; 
+    font-size: 11px;
+}
+
+#customMarkerControls button { 
+    margin-top: 5px; 
+    padding: 6px; 
+    font-size: 11px; 
+    background-color: #0d75dd; 
+    color: #ccc; 
+    border: 1px solid #101010; 
+    width: 100%;
+}
+
+/* Add Custom Marker button */
+#customMarkerControlsContainer #prepareCustomMarkerButton  
+{ 
+    margin-top: 5px; 
+    padding: 6px; 
+    font-size: 11px; 
+    font-weight: bold;
+    background-color: #2d2f32; 
+    color: #0d75dd; 
+    border: 1px solid #101010; 
+    width: 100%;
+}
+
+
+#customMarkerControls button.prepareCustomMarkerButton
+ { 
+    margin-top: 5px; 
+    padding: 6px;
+    font-size: 11px; 
+    background-color: #0d75dd; 
+    color: #ccc; 
+    border: 1px solid #101010; 
+    width: 100%;
+
+}
+
+
+/* ENDS HERE */
+
+#customMarkerControls button:hover { 
+    background-color: #5a5d60; 
+}
+
+#plottedMarkersTableContainer {
+    width: 100%; 
+    flex-grow: 1; /* Table container takes available vertical space */
+    overflow-y: auto; /* ADD SCROLLBAR */
+    border: 1px solid #101010;
+    background-color: #101010; 
+    box-sizing: border-box;
+    min-height: 70px; /* Ensure it has some initial visible area */
+}
+
+#plottedMarkersTable, #probeScanTable { 
+    width: 100%; 
+    border-collapse: collapse; 
+    font-size: 10px; 
+    color: #00BFFF; 
+}
+
+#plottedMarkersTable th, #plottedMarkersTable td,
+
+#probeScanTable th, #probeScanTable td { 
+    border: 1px solid #1a1a1a; 
+    padding: 3px 4px; 
+    text-align: left; 
+}
+
+#plottedMarkersTable th, #probeScanTable th { 
+    background-color: #282828; 
+    position: sticky; 
+    top: 0; 
+    z-index: 1; 
+    color: #888;
+}
+
+#plottedMarkersTable input[type="text"].notes-input, 
+
+#probeScanTable input[type="text"].notes-input { 
+    width: 98%; 
+    box-sizing: border-box; 
+    background-color: #0c0c0c; 
+    color: #00BFFF; 
+    border: 1px solid #2a2a2a; 
+    padding: 2px; 
+    font-size: 9px; 
+}
+
+#plottedMarkersTable button.delete-marker-button, 
+
+#probeScanTable button.link-marker-button { 
+    font-size: 9px; 
+    padding: 1px 4px; 
+    background-color: #302020; 
+    color: #FF8080; 
+    border:1px solid #401010; 
+    cursor:pointer; 
+}
+
+#plottedMarkersTable button.delete-marker-button:hover,
+
+#probeScanTable button.link-marker-button:hover { 
+    background-color: #403030; 
+}
+
+#plottedMarkersTable td:nth-child(3), #plottedMarkersTable td:nth-child(4) { 
+    text-align: right; 
+    white-space: nowrap;
+}
+
+#probeScanTable td:nth-child(5), #probeScanTable td:nth-child(6) { 
+    text-align: right; 
+    white-space: nowrap;
+}
+
+#probeScanTable tr.res-green td { 
+    color: #33FF33; 
+}
+
+#probeScanTable tr.res-yellow td { 
+    color: #FFFF66; 
+}
+
+#probeScanTable tr.res-red td { 
+    color: #FF6666; 
+}
+
+#infoBox { 
+    position: absolute; 
+    bottom: 10px; right: 10px; 
+    background-color: rgba(30, 30, 35, 0.95); 
+    color: #c8c8c8; 
+    padding: 10px; 
+    border-radius: 3px; 
+    max-width: 200px; 
+    pointer-events: none; 
+    opacity: 0; 
+    transition: opacity 0.2s ease-in-out; 
+    font-size: 11px; white-space: normal; 
+    border: 1px solid #00A8FF; 
+    z-index: 100; transform: none; 
+}
+
+#infoBox.visible { 
+    opacity: 1; 
+}
+
+.scanner-marker-cross line { 
+    stroke: #FFCC00; 
+    stroke-width: 2; 
+} 
+
+.scanner-marker-label { 
+    fill: #FFCC00; 
+    font-size: 9px; 
+    text-anchor: start; 
+    dominant-baseline: middle; 
+    cursor: pointer; 
+}
+
+.signature-zone-circle { 
+    fill: rgba(0, 168, 255, 0.02); 
+    stroke: rgba(0, 168, 255, 0.1); 
+    pointer-events: none; 
+}
+
+.custom-marker-label { 
+    font-size: 9px; 
+    text-anchor: middle; 
+    dominant-baseline: text-before-edge; 
+    pointer-events: none; 
+    cursor: default; 
+}

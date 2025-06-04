@@ -1,91 +1,117 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
+  <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>EVE System Mapper - J121116</title> 
-    <link rel="stylesheet" href="SolarSystemMap.css">
-</head>
-<body>
+    <title>EVE System Mapper - J121116</title>
+    <link rel="stylesheet" href="style/SolarSystemMap.css" />
+  </head>
+  <body>
     <header id="appHeader">
-        <h1>System Information - J121116</h1>
+      <h1 id="currentSystemTitleHeader">System Information - J121116</h1>
+      <div id="systemDetailsHeader"> 
+      <span>Class: <span id="hdrSysClass">N/A</span></span>
+      <span>Effect: <span id="hdrSysEffect">N/A</span></span>
+      <span>Statics: <span id="hdrSysStatics">N/A</span></span>
+  </div>
+      <div id="systemSelectionControlsHeader">
+        <input type="text" id="systemIdInput" placeholder="Enter System Name" />
+        <button id="loadSystemButton">Load System</button>
+      </div>
     </header>
 
     <main id="appGridContainer">
-        <div id="mapWindow" class="grid-item">
-            <div id="svgContainer">
-                <svg id="solarSystemSVG" preserveAspectRatio="xMidYMid meet">
-                    
-                </svg>
-                <div id="infoBox"></div> 
+      <div id="mapWindow" class="grid-item">
+        <div id="svgContainer">
+          <svg id="solarSystemSVG" preserveAspectRatio="xMidYMid meet"></svg>
+        </div>
+        <div id="infoBox"></div>
+      </div>
 
+      <div id="scanInputArea" class="grid-item">
+        <textarea id="scanDataInput" placeholder="Paste D-Scan or Probe Scan data..."></textarea>
+      </div>
+
+      <div id="buttonPanelArea" class="grid-item">
+        <div id="buttonPanel">
+          <button id="parseScanButton">Parse D-Scan & Select Refs</button>
+          <button id="trilaterateSelectedButton" style="display: none">Trilaterate Selected (3)</button>
+          <button id="parseProbeDataButton">List Probe Scans</button>
+          <button id="toggleSignatureZonesButton">Toggle Signature Zones</button>
+          <button id="clearScanDataButton">Clear Scan Text</button>
+          <button id="clearMarkersButton">Clear Markers & Lists</button>
+        </div>
+      </div>
+      
+      <div id="dScanRefSelectionArea" class="grid-item">
+        <div id="selectableCelestialsContainer" style="display: none;"> 
+            <h4>Select 3 Refs: <span id="selectionCount">(0/3)</span></h4>
+            <div id="selectableCelestialsList"></div>
+        </div>
+      </div>
+
+      <div id="plottedLocationsArea" class="grid-item">
+        <h2>Plotted Locations</h2>
+        <div id="plottedMarkersTableContainer">
+          <table id="plottedMarkersTable">
+            <thead><tr><th>Label</th><th>Type / Notes</th><th>Est. X (AU)</th><th>Est. Z (AU)</th><th>Actions</th></tr></thead>
+            <tbody id="plottedMarkersTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+      
+      <div id="rightSidePanel" class="grid-item">
+        <h2>D-Scan Threat Analysis</h2> 
+        <p>(Future Feature)</p>
+        <div id="topRightButtonPanel" style="margin-top: auto;">
+          <button id="futureButton1" disabled>(Future) Save State</button>
+          <button id="anotherFutureButton" disabled>(Future) Load State</button>
+        </div>
+      </div>
+
+      <div id="probeScanResultsArea" class="grid-item">
+        <h2>Probe Scan Results</h2>
+        <div id="probeScanListContainer">
+          <table id="probeScanTable">
+            <thead><tr><th>ID</th><th>Group</th><th>Name</th><th>Type Detail</th><th>Res %</th><th>Range</th><th>Linked</th><th>Actions</th></tr></thead>
+            <tbody id="probeScanTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+    
+      <div id="lootEstimationArea" class="grid-item">
+        <h2>Add Custom Marker</h2>
+        <div id="customMarkerControlsContainer">
+            <button id="prepareCustomMarkerButton">Prepare Custom Marker</button>
+            <div id="customMarkerControls" style="display: none;">
+              <h4>Create Marker</h4>
+              <div><label for="markerShape">Shape:</label><select id="markerShape">
+                <option value="cross">Cross (+)</option>
+                <option value="circle" selected>Circle (O)</option>
+                <option value="square">Square ([])</option>
+                <option value="diamond">Diamond (<>)</option>
+                <option value="triangle_up">Triangle (Up ^)</option>
+                <option value="dscan_area">D-Scan Area (14.3AU)</option>
+              </select></div>
+              <div><label for="markerColor">Color:</label><select id="markerColor"><option value="red" style="background-color: red; color: white">Red</option><option value="lime" style="background-color: lime;">Lime</option><option value="blue" style="background-color: blue; color: white">Blue</option><option value="yellow" style="background-color: yellow; color: black">Yellow</option><option value="cyan" style="background-color: cyan; color: black">Cyan</option><option value="magenta" style="background-color: magenta;">Magenta</option><option value="white" style="background-color: white; color: black">White</option><option value="orange" style="background-color: orange;">Orange</option></select></div>
+              <p id="customMarkerInstructions" style="font-size: 10px; color: #888;">Click on map to place.</p>
+              <button id="cancelCustomMarkerButton">Cancel Adding</button>
             </div>
-            
         </div>
+      </div>
 
-        <div id="probeInputData" class="grid-item"> 
-            <textarea id="scanDataInput" placeholder="Paste D-Scan or Probe Scan data..."></textarea>
+      <div id="systemInfoArea" class="grid-item">
+        <h2>System Information</h2>
+        <div id="systemDetailsBox">
+          <p><strong>Class:</strong> <span id="sysClass">N/A</span></p>
+          <p><strong>Effect:</strong> <span id="sysEffect">N/A</span></p>
+          <p><strong>Static 1:</strong> <span id="sysStatic1">N/A</span></p>
+          <p><strong>Static 2:</strong> <span id="sysStatic2">N/A</span></p>
         </div>
-
-   
-        <div id="buttonPanelGridItem" class="grid-item"> 
-            <div id="buttonPanel"> 
-                <button id="parseScanButton">Parse D-Scan & Select Refs</button>
-                <button id="trilaterateSelectedButton" style="display:none;">Trilaterate Selected (3)</button>
-                <button id="parseProbeDataButton">List Probe Scans</button>
-                <button id="toggleSignatureZonesButton">Toggle Signature Zones</button>
-                <button id="clearScanDataButton">Clear Scan Text</button>
-                <button id="clearMarkersButton">Clear Markers & Lists</button>
-            </div>
-        </div>
-
-        <div id="pointSelection" class="grid-item">
-            <div id="selectableCelestialsContainer"> 
-                <h4>Select 3 Refs: <span id="selectionCount">(0/3)</span></h4>
-                <div id="selectableCelestialsList"></div>
-            </div>
-        </div>
-
-        <div id="plottedLocations" class="grid-item">
-            <h2>Plotted Locations</h2>
-            <div id="plottedMarkersTableContainer">
-                <table id="plottedMarkersTable">
-                    <thead><tr><th>Label</th><th>Type / Notes</th><th>Est. X (AU)</th><th>Est. Z (AU)</th><th>Actions</th></tr></thead>
-                    <tbody id="plottedMarkersTableBody"></tbody>
-                </table>
-            </div>
-        </div>
-
-        <div id="spareArea" class="grid-item">
-            <div id="topRightButtonPanel">
-                <button id="futureButton1">(Future) Save State</button>
-                <button id="anotherFutureButton">(Future) Load State</button>
-            </div>
-            <p style="margin-top: auto; color: #555; align-self: center;">Spare Area</p> 
-        </div>
-
-        <div id="probeScanResults" class="grid-item"> 
-            <h2>Probe Scan Results</h2>
-            <div id="probeScanListContainer">
-                <table id="probeScanTable">
-                    <thead><tr><th>ID</th><th>Group</th><th>Name</th><th>Type Detail</th><th>Res %</th><th>Range</th><th>Linked</th><th>Actions</th></tr></thead>
-                    <tbody id="probeScanTableBody"></tbody> 
-                </table>
-            </div>
-        </div>
-
-        <div id="lootEstimation" class="grid-item">
-            <h2>Loot Estimation</h2>
-            <p>(Future Feature)</p>
-        </div>
-
-        <div id="systemInformation" class="grid-item">
-            <h2>System Information</h2>
-            <p>(Future Feature)</p>
-        </div>
+      </div>
     </main>
     
-    
-    <script src="SolarSystem.js" defer></script>
-</body>
+    <script src="script/SolarSystem.js" defer></script>
+  </body>
 </html>
