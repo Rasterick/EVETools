@@ -1,251 +1,121 @@
 // SolarSystem.js
-document.addEventListener("DOMContentLoaded", () => {
-  document.addEventListener("DOMContentLoaded", () => {
-    // ...
-    let currentSystemScaleFactor = 0; // Initialize to a value that indicates it's not set yet
-    // ... rest of your global lets and consts ...
-  });
+document.addEventListener('DOMContentLoaded', () => {
 
-  let currentSystemCelestials = [];
+    // --- SECTION 1: Data (now fetched), Constants, and Global Variables ---
+    let currentSystemCelestials = []; 
 
-  const SVG_NS = "http://www.w3.org/2000/svg";
-  const AU_KM = 149597870.7;
-  const CEL_RADIUS_FACTOR = 0.05 * 0.25;
-  const ORBIT_WIDTH_FACTOR = 0.0015;
+    const SVG_NS = "http://www.w3.org/2000/svg";
+    const AU_KM = 149597870.7;
+    const CEL_RADIUS_FACTOR = 0.05 * 0.25;
+    const ORBIT_WIDTH_FACTOR = 0.0015;
+    // const G_CONST = 6.67430e-11; // Only if needed for Keplerian calcs you re-add
 
-  const svgElement = document.getElementById("solarSystemSVG");
-  const infoBox = document.getElementById("infoBox");
-  const scanDataInput = document.getElementById("scanDataInput"); // THE ONE Textarea
-  const parseScanButton = document.getElementById("parseScanButton");
-  const trilaterateSelectedButton = document.getElementById("trilaterateSelectedButton");
-  const parseProbeDataButton = document.getElementById("parseProbeDataButton"); // Button for probe data
-  const toggleSignatureZonesButton = document.getElementById("toggleSignatureZonesButton");
-  const clearScanDataButton = document.getElementById("clearScanDataButton");
-  const clearMarkersButton = document.getElementById("clearMarkersButton");
-  const plottedMarkersTableBody = document.getElementById("plottedMarkersTableBody");
-  const probeScanTableBody = document.getElementById("probeScanTableBody"); // <<< ENSURE THIS IS CORRECTLY REFERENCED
-  const selectableCelestialsContainer = document.getElementById("selectableCelestialsContainer");
-  const selectableCelestialsList = document.getElementById("selectableCelestialsList");
-  const selectionCountSpan = document.getElementById("selectionCount");
-  /* - Add Custom Markers ---*/
-
-  const prepareCustomMarkerButton = document.getElementById("prepareCustomMarkerButton");
-  const customMarkerControlsDiv = document.getElementById("customMarkerControls");
-  const markerShapeSelect = document.getElementById("markerShape");
-  const markerColorSelect = document.getElementById("markerColor"); // Or markerColorPicker if using input type=color
-  const cancelCustomMarkerButton = document.getElementById("cancelCustomMarkerButton");
-  const customMarkerInstructions = document.getElementById("customMarkerInstructions");
-
-  let isAddingCustomMarkerMode = false; // State variable
-  let customMarkerCounter = 0; // Separate counter for custom markers
-  /* -- END Of Custom Marker ----*/
-
-  let baseOrbitsGroup,
-    signatureZonesGroup,
-    celestialBodiesGroup,
-    scanMarkersGroup;
-  let currentSystemScaleFactor = 1;
-  let scannerPosMarkerCounter = 0;
-  let plottedMarkerData = {};
-  let selectedDragTarget = null;
-  let dragInitiator = null;
-  let offset = { x: 0, y: 0 };
-  let isDraggingMarker = false;
-  let knownPointsFromCurrentScan = [];
-  let selectedReferencePoints = [];
-  let parsedProbeSignatures = [];
-  let isLinkingProbeSignature = false;
-  let signatureToLink = null;
-
-  const systemIdInput = document.getElementById("systemIdInput");
-  const loadSystemButton = document.getElementById("loadSystemButton");
-
-  /* - Event Listener for Custom Markers - */
-
-  if (prepareCustomMarkerButton) {
-    prepareCustomMarkerButton.addEventListener("click", () => {
-      isAddingCustomMarkerMode = true;
-      console.log(
-        "prepareCustomMarkerButton clicked: isAddingCustomMarkerMode set to",
-        isAddingCustomMarkerMode
-      );
-      customMarkerControlsDiv.style.display = "flex"; // Show controls
-      if (customMarkerInstructions)
-        customMarkerInstructions.textContent =
-          "Select shape & color, then CLICK ON MAP to place. You'll be prompted for a label.";
-      // Disable other major action buttons while in this mode (optional)
-      if (parseScanButton) parseScanButton.disabled = true;
-      if (trilaterateSelectedButton) trilaterateSelectedButton.disabled = true;
-      if (parseProbeDataButton) parseProbeDataButton.disabled = true;
-      console.log("Entered custom marker placement mode.");
-    });
-  }
-
-  if (cancelCustomMarkerButton) {
-    cancelCustomMarkerButton.addEventListener("click", () => {
-      isAddingCustomMarkerMode = false;
-      if (customMarkerControlsDiv)
-        customMarkerControlsDiv.style.display = "none";
-      if (customMarkerInstructions)
-        customMarkerInstructions.textContent =
-          "Select shape & color, then CLICK ON MAP to place.";
-
-      // Re-enable other buttons
-      if (parseScanButton) parseScanButton.disabled = false;
-      if (trilaterateSelectedButton) {
-        trilaterateSelectedButton.disabled = !(
-          selectedReferencePoints && selectedReferencePoints.length === 3
-        );
-      }
-      if (parseProbeDataButton) parseProbeDataButton.disabled = false;
-      console.log("Cancelled custom marker placement mode via button.");
-    });
-  }
-
-  /* -- END OF CUSTOM MARKER CONTROLS -- */
-
-  if (loadSystemButton) {
-    loadSystemButton.addEventListener("click", () => {
-      const systemIdentifier = systemIdInput.value.trim(); // Could be name or ID
-      if (systemIdentifier) {
-        fetchAndRenderSystem(systemIdentifier); // Pass what the user typed
-      } else {
-        alert("Please enter a System Name or ID.");
-      }
-    });
-  }
-  console.log("Script Start: DOM loaded, constants and DOM elements defined.");
-  if (!probeScanTableBody)
-    console.error(
-      "CRITICAL ERROR: probeScanTableBody element not found on script start!"
-    );
-
-  // --- SECTION 2: ALL FUNCTION DEFINITIONS --- (Ensure all are complete)
-
-  /* Function to use the data generated by the PHP Script db_test.php */
-
-  async function fetchAndRenderSystem(systemIdToLoad) {
+    // DOM Element References (ensure all IDs match your HTML)
+    const svgElement = document.getElementById('solarSystemSVG');
+    const infoBox = document.getElementById('infoBox');
+    const scanDataInput = document.getElementById('scanDataInput');
+    const parseScanButton = document.getElementById('parseScanButton');
+    const trilaterateSelectedButton = document.getElementById('trilaterateSelectedButton');
+    const parseProbeDataButton = document.getElementById('parseProbeDataButton');
+    const toggleSignatureZonesButton = document.getElementById('toggleSignatureZonesButton');
+    const clearScanDataButton = document.getElementById('clearScanDataButton');
+    const clearMarkersButton = document.getElementById('clearMarkersButton');
+    const plottedMarkersTableBody = document.getElementById('plottedMarkersTableBody');
+    const probeScanTableBody = document.getElementById('probeScanTableBody');
+    const selectableCelestialsContainer = document.getElementById('selectableCelestialsContainer');
+    const selectableCelestialsList = document.getElementById('selectableCelestialsList');
+    const selectionCountSpan = document.getElementById('selectionCount');
+    const systemIdInput = document.getElementById('systemIdInput');
+    const loadSystemButton = document.getElementById('loadSystemButton');
+    const prepareCustomMarkerButton = document.getElementById('prepareCustomMarkerButton');
+    const customMarkerControlsDiv = document.getElementById('customMarkerControls');
+    const markerShapeSelect = document.getElementById('markerShape');
+    const markerColorSelect = document.getElementById('markerColor');
+    const cancelCustomMarkerButton = document.getElementById('cancelCustomMarkerButton');
+    const customMarkerInstructions = document.getElementById('customMarkerInstructions');
+    const hdrSysClassEl = document.getElementById('hdrSysClass');
+    const hdrSysEffectEl = document.getElementById('hdrSysEffect');
+    const hdrSysStaticsEl = document.getElementById('hdrSysStatics');
+    const sysClassEl = document.getElementById('sysClass');
+    const sysEffectEl = document.getElementById('sysEffect');
+    const sysStatic1El = document.getElementById('sysStatic1');
+    const sysStatic2El = document.getElementById('sysStatic2');
     
-    console.log(`Fetching data for system ID: ${systemIdToLoad}`);
+    let baseOrbitsGroup, signatureZonesGroup, celestialBodiesGroup, scanMarkersGroup, dscanRangeCirclesGroup; // dscanRangeCirclesGroup for later
+    let currentSystemScaleFactor = 1;
+    let scannerPosMarkerCounter = 0;
+    let customMarkerCounter = 0;
+    let plottedMarkerData = {};
+    let selectedDragTarget = null;
+    let dragInitiator = null;
+    let offset = { x: 0, y: 0 };
+    let isDraggingMarker = false;
+    let knownPointsFromCurrentScan = [];
+    let selectedReferencePoints = [];
+    let parsedProbeSignatures = [];
+    let isLinkingProbeSignature = false;
+    let signatureToLink = null;
+    let isAddingCustomMarkerMode = false;
 
-    // Clear existing map and tables before loading new data
-    
-    if (svgElement) {
-        svgElement.innerHTML = ''; // Clear ALL SVG content (groups will be recreated)
-        console.log("Cleared svgElement innerHTML");
+    console.log("SolarSystem.js: Script Start, DOM loaded.");
+    // Null checks for critical elements
+    if (!svgElement) console.error("CRITICAL: svgElement not found!");
+    if (!plottedMarkersTableBody) console.error("CRITICAL: plottedMarkersTableBody not found!");
+    if (!probeScanTableBody) console.error("CRITICAL: probeScanTableBody not found!");
+
+
+    // --- SECTION 2: ALL FUNCTION DEFINITIONS ---
+
+    // Paste your working fetchAndRenderSystem function here
+    async function fetchAndRenderSystem(systemIdentifier) {
+        console.log(`Fetching data for system: ${systemIdentifier}`);
+        if (svgElement) { svgElement.innerHTML = '';}
+        if (plottedMarkersTableBody) plottedMarkersTableBody.innerHTML = "";
+        if (probeScanTableBody) probeScanTableBody.innerHTML = "";
+        if (selectableCelestialsContainer) selectableCelestialsContainer.style.display = "none";
+        currentSystemCelestials = []; scannerPosMarkerCounter = 0; customMarkerCounter = 0;
+        plottedMarkerData = {}; parsedProbeSignatures = [];
+        selectedReferencePoints = []; knownPointsFromCurrentScan = []; 
+        if (typeof updateSelectionCountAndButton === 'function') updateSelectionCountAndButton();
+        isLinkingProbeSignature = false; signatureToLink = null; isAddingCustomMarkerMode = false;
+        if (customMarkerControlsDiv) customMarkerControlsDiv.style.display = 'none';
+        if (parseScanButton) parseScanButton.disabled = false;
+        if (trilaterateSelectedButton) trilaterateSelectedButton.disabled = true; 
+        if (parseProbeDataButton) parseProbeDataButton.disabled = false;
+        if (toggleSignatureZonesButton) toggleSignatureZonesButton.textContent = "Show Signature Zones";
+        if (signatureZonesGroup && signatureZonesGroup.style) signatureZonesGroup.style.display = 'none';
+        if (dscanRangeCirclesGroup) { dscanRangeCirclesGroup.innerHTML = ''; }
+        console.log("All previous system state and UI cleared/reset for new system load.");
+        try {
+            const response = await fetch('../db_test.php', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded', }, body: `systemID=${encodeURIComponent(systemIdentifier)}` });
+            if (!response.ok) { const errorText = await response.text(); console.error("PHP Error:", errorText); throw new Error(`HTTP error ${response.status}`);}
+            const data = await response.json();
+            if (data && data.systemInfo) {
+                const si = data.systemInfo;
+                const appTitleH1 = document.getElementById('currentSystemTitleHeader');
+                if (appTitleH1) appTitleH1.textContent = `System Information - ${si.systemName || systemIdentifier}`;
+                document.title = `EVE System Mapper - ${si.systemName || systemIdentifier}`;
+                if(hdrSysClassEl) hdrSysClassEl.textContent = si.class || 'N/A';
+                if(hdrSysEffectEl) hdrSysEffectEl.textContent = si.effect || 'None';
+                let staticsCombined = "";
+                if (si.static1_type) staticsCombined += `${si.static1_type}${si.static1_leadsTo ? ' ('+si.static1_leadsTo+')' : ''}`;
+                if (si.static2_type) staticsCombined += `${staticsCombined ? ' / ' : ''}${si.static2_type}${si.static2_leadsTo ? ' ('+si.static2_leadsTo+')' : ''}`;
+                if(hdrSysStaticsEl) hdrSysStaticsEl.textContent = staticsCombined || 'None';
+                if(sysClassEl) sysClassEl.textContent = si.class || 'N/A';
+                if(sysEffectEl) sysEffectEl.textContent = si.effect || 'None';
+                if(sysStatic1El) sysStatic1El.textContent = `${si.static1_type || 'N/A'}${si.static1_leadsTo ? ' -> ' + si.static1_leadsTo : ''}`;
+                if(sysStatic2El) sysStatic2El.textContent = `${si.static2_type || 'N/A'}${si.static2_leadsTo ? ' -> ' + si.static2_leadsTo : ''}`;
+            } else { console.warn("No systemInfo received for system:", systemIdentifier); /* Clear info fields */ }
+            let celestialsToRender = [];
+            if (data && data.celestials && data.celestials.length > 0) celestialsToRender = data.celestials;
+            else if (data && Array.isArray(data) && data.length > 0 && !data.systemInfo) celestialsToRender = data;
+            currentSystemCelestials = celestialsToRender;
+            if (currentSystemCelestials.length > 0) { if (typeof renderSystemSVG === 'function') renderSystemSVG(currentSystemCelestials); }
+            else { if (svgElement) svgElement.innerHTML = ''; console.error('No celestial data for system ID:', systemIdentifier); alert(`No celestial data for ${systemIdentifier}.`); }
+        } catch (error) { console.error('Error fetching system data:', error); alert(`Error loading system data: ${error.message}`); }
     }
-    
-    // Clear SVG
-    if (plottedMarkersTableBody) plottedMarkersTableBody.innerHTML = ""; // Clear plotted markers table
-    if (probeScanTableBody) probeScanTableBody.innerHTML = ""; // Clear probe scan table
 
-      if (selectableCelestialsContainer) selectableCelestialsContainer.style.display = "none";
-    
-    // Reset counters and data stores
-    scannerPosMarkerCounter = 0;
-    plottedMarkerData = {};
-    parsedProbeSignatures = [];
-    selectedReferencePoints = [];
-    knownPointsFromCurrentScan = []; // Also clear this
-    if (typeof updateSelectionCountAndButton === 'function') updateSelectionCountAndButton();
-    // Reset linking state too
-    isLinkingProbeSignature = false;
-    signatureToLink = null;
-    
-    if (!probeScanTableBody)
-      console.error(
-        "CRITICAL ERROR: probeScanTableBody element not found on script start!"
-      );
-    
-      if (selectableCelestialsContainer)
-      selectableCelestialsContainer.style.display = "none"; // Hide selection UI
-    
-      // Reset counters and data stores related to markers
-    scannerPosMarkerCounter = 0;
-    plottedMarkerData = {};
-    parsedProbeSignatures = [];
-    selectedReferencePoints = [];
-    if (typeof updateSelectionCountAndButton === "function")
-      updateSelectionCountAndButton();
-
-    try {
-      const response = await fetch("../db_test.php", {
-        // URL of your PHP script
-        method: "POST",
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded", // Or 'application/json' if PHP expects JSON
-        },
-        body: `systemID=${encodeURIComponent(systemIdToLoad)}`, // Send systemID as POST data
-        // If PHP expects JSON: body: JSON.stringify({ systemID: systemIdToLoad })
-      });
-
-      if (!response.ok) {
-        throw new Error(
-          `Network response was not ok: ${response.status} ${response.statusText}`
-        );
-      }
-
-      const data = await response.json(); // Expecting an array of celestial objects
-
-      // Process the fetched data - System Information
-
- if (data && data.systemInfo) {
-            const sysInfo = data.systemInfo;
-            const appTitle = document.getElementById('currentSystemTitleHeader');
-            if (appTitle) appTitle.textContent = `System Information - ${sysInfo.systemName || systemIdToLoad}`;
-            document.title = `EVE System Mapper - ${sysInfo.systemName || systemIdToLoad}`;
-
-            // Populate header details
-            document.getElementById('hdrSysClass').textContent = sysInfo.class || 'N/A';
-            document.getElementById('hdrSysEffect').textContent = sysInfo.effect || 'None';
-            let staticsText = "";
-            if (sysInfo.static1_type) {
-                staticsText += `${sysInfo.static1_type}${sysInfo.static1_leadsTo ? ' (' + sysInfo.static1_leadsTo + ')' : ''}`;
-            }
-            if (sysInfo.static2_type) {
-                if (staticsText !== "") staticsText += " / ";
-                staticsText += `${sysInfo.static2_type}${sysInfo.static2_leadsTo ? ' (' + sysInfo.static2_leadsTo + ')' : ''}`;
-            }
-            document.getElementById('hdrSysStatics').textContent = staticsText || 'None';
-
-            // Populate main system info box
-            document.getElementById('sysClass').textContent = sysInfo.class || 'N/A';
-            document.getElementById('sysEffect').textContent = sysInfo.effect || 'None';
-            // For detailed statics, you might want separate spans for type and leadsTo
-            document.getElementById('sysStatic1').textContent = `${sysInfo.static1_type || 'N/A'}${sysInfo.static1_leadsTo ? ' -> ' + sysInfo.static1_leadsTo : ''}`;
-            document.getElementById('sysStatic2').textContent = `${sysInfo.static2_type || 'N/A'}${sysInfo.static2_leadsTo ? ' -> ' + sysInfo.static2_leadsTo : ''}`;
-        } else {
-            console.warn("No systemInfo received for system:", systemIdToLoad);
-            // Clear fields if no info
-            const appTitle = document.getElementById('currentSystemTitleHeader');
-            if (appTitle) appTitle.textContent = `System Information - ${systemIdToLoad} (Info N/A)`;
-            // ... clear other info fields ...
-        }
-
-        // --- Process celestials ---
-        if (data && data.celestials && data.celestials.length > 0) {
-            currentSystemCelestials = data.celestials; 
-            if (typeof renderSystemSVG === 'function') {
-                renderSystemSVG(currentSystemCelestials); 
-            } else { console.error("renderSystemSVG is not defined!"); }
-        } else {
-            currentSystemCelestials = []; // Clear if no celestials
-            if (svgElement) svgElement.innerHTML = ''; // Clear map
-            console.error('No celestial data received for system ID:', systemIdToLoad);
-            alert(`No celestial data found for system ID: ${systemIdToLoad}. Map cannot be drawn.`);
-        }
-
-    } catch (error) {
-      console.error("Error fetching system data:", error);
-      alert(`Error loading system data: ${error.message}`);
-      const appTitle = document.querySelector("#appHeader h1");
-      if (appTitle) appTitle.textContent = `System Information - ERROR`;
-    }
-  }
-
-  // ---- END
-
-  function safeParseFloat(value) {
+    function safeParseFloat(value) {
     if (
       value === "None" ||
       value === null ||
@@ -256,8 +126,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const num = parseFloat(String(value).replace(/,/g, ""));
     return isNaN(num) ? NaN : num;
   }
-
-  function transformRawDataToSystemFormat(dataToTransform) {
+    function transformRawDataToSystemFormat(dataToTransform) {
     const cels = dataToTransform.map((body) => {
       let groupID;
       if (body.itemName.includes("Star")) groupID = 6;
@@ -313,7 +182,10 @@ document.addEventListener("DOMContentLoaded", () => {
     return { solarSystemName: systemName, cels: cels };
   }
 
-  function calculateOrbitalProperties(objects) {
+
+
+
+    function calculateOrbitalProperties(objects) {
     objects.forEach((obj) => {
       obj.map_x =
         obj.map_x !== undefined
@@ -329,8 +201,7 @@ document.addEventListener("DOMContentLoaded", () => {
           : 0;
     });
   }
-
-  function renderSystemSVG(celestialDataForSystem) {
+    function renderSystemSVG(celestialDataForSystem) {
     console.log("renderSystemSVG: Called with data for system.");
     if (!celestialDataForSystem || celestialDataForSystem.length === 0) {
       console.error("renderSystemSVG called with no celestial data.");
@@ -508,13 +379,13 @@ document.addEventListener("DOMContentLoaded", () => {
     });
     console.log("renderSystemSVG: Finished drawing map.");
   }
-
-  function formatDistanceKmToAu(km) {
+    
+     function formatDistanceKmToAu(km) {
     if (km === undefined) return "N/A";
     if (km === 0) return "0 AU";
     return (km / AU_KM).toFixed(2) + " AU";
   }
-  function formatNumber(num) {
+    function formatNumber(num) {
     if (num === undefined) return "N/A";
     if (num === 0) return "0";
     const absNum = Math.abs(num);
@@ -525,8 +396,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (absNum >= 1e3) return sign + (absNum / 1e3).toFixed(0) + " kkm";
     return sign + absNum.toFixed(0) + " km";
   }
-
-  function handleBodyMouseOverSVG(event) {
+    function handleBodyMouseOverSVG(event) {
     const celData = event.target.celestialData;
     if (!celData) return;
     const original = celData.originalData;
@@ -553,15 +423,12 @@ document.addEventListener("DOMContentLoaded", () => {
       (event.target.originalRadius * 1.5).toString()
     );
   }
-  function handleBodyMouseMoveSVG(event) {
-    /* This function is not currently used due to fixed infobox */
-  }
-  function handleBodyMouseOutSVG(event) {
+    function handleBodyMouseOutSVG(event) {
     infoBox.classList.remove("visible");
     event.target.setAttribute("r", event.target.originalRadius.toString());
   }
-
-  function parseDistanceToKm(distanceStr) {
+    
+     function parseDistanceToKm(distanceStr) {
     if (distanceStr === "-" || !distanceStr) return NaN;
     let distanceKmValue;
     const val = safeParseFloat(distanceStr);
@@ -576,7 +443,10 @@ document.addEventListener("DOMContentLoaded", () => {
     return isNaN(distanceKmValue) ? NaN : distanceKmValue;
   }
 
-  function parseScanLinesForTrilateration(scanText) {
+
+
+
+    function parseScanLinesForTrilateration(scanText) {
     const lines = scanText.split("\n");
     const knownPoints = [];
     lines.forEach((line) => {
@@ -601,8 +471,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
     return knownPoints;
   }
-
-  function trilaterate2D(p1, p2, p3) {
+    function trilaterate2D(p1, p2, p3) {
     let ex_x = p2.x - p1.x;
     let ex_y = p2.y - p1.y;
     const d_12 = Math.sqrt(ex_x * ex_x + ex_y * ex_y);
@@ -640,8 +509,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const final_scanner_z = p1.y + x_prime * ex_y + y_prime * ey_y;
     return { x: final_scanner_x, z: final_scanner_z };
   }
-
-  function makeMarkerDraggable(elementToDrag, groupToActuallyTransform) {
+    
+   function makeMarkerDraggable(elementToDrag, groupToActuallyTransform) {
     elementToDrag.style.cursor = "move";
     elementToDrag.addEventListener("mousedown", (e) => {
       if (e.button !== 0) return;
@@ -677,7 +546,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  svgElement.addEventListener("mousemove", (e) => {
+    svgElement.addEventListener("mousemove", (e) => {
     if (!isDraggingMarker || !selectedDragTarget) return;
     e.preventDefault();
     const CTM = svgElement.getScreenCTM();
@@ -715,11 +584,9 @@ document.addEventListener("DOMContentLoaded", () => {
       dragInitiator = null;
     }
   });
-  /* -- Add Custom Marker SVG EVent Listener -- */
-  // Place this after makeMarkerDraggable and the mousemove/up/leave listeners for dragging,
-  // but before the button event listener attachments (like parseScanButton.addEventListener)
-
-  svgElement.addEventListener("click", (e) => {
+    
+  
+   svgElement.addEventListener("click", (e) => {
     console.log(
       "SVG clicked. isAddingCustomMarkerMode:",
       isAddingCustomMarkerMode,
@@ -909,9 +776,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  /* ENd of Custom Marker SVG Event Listener */
-
-  function addMarkerToTable(markerId, labelText, posX_km, posZ_km) {
+    function addMarkerToTable(markerId, labelText, posX_km, posZ_km) {
     if (!plottedMarkersTableBody) {
       console.error(
         "CRITICAL addMarkerToTable: plottedMarkersTableBody is null or undefined!"
@@ -1046,6 +911,52 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+function handleParseScanAndPrepareSelection() {
+    console.log("handleParseScanAndPrepareSelection called"); // For debugging
+
+    // Ensure necessary DOM elements are available
+    if (!scanDataInput || !selectableCelestialsContainer || !trilaterateSelectedButton || !selectionCountSpan) {
+        console.error("handleParseScanAndPrepareSelection: One or more required UI elements for D-Scan selection are missing from the DOM or not yet defined in JS.");
+        alert("Error: UI components for D-Scan processing are not ready.");
+        return;
+    }
+
+    const scanText = scanDataInput.value;
+
+    if (!scanText.trim()) {
+        alert("Paste D-Scan data into the text area.");
+        selectableCelestialsContainer.style.display = 'none';
+        trilaterateSelectedButton.style.display = 'none';
+        // Clear any existing D-Scan range circles if that group exists
+        if (typeof dscanRangeCirclesGroup !== 'undefined' && dscanRangeCirclesGroup) {
+            dscanRangeCirclesGroup.innerHTML = '';
+        }
+        knownPointsFromCurrentScan = []; // Clear previous scan points
+        selectedReferencePoints = [];    // Clear previous selections
+        if (typeof updateSelectionCountAndButton === 'function') {
+            updateSelectionCountAndButton(); // Update UI for (0/3) and button state
+        }
+        return;
+    }
+
+    // Parse the scan text to find known celestials and their distances
+    if (typeof parseScanLinesForTrilateration === 'function') {
+        knownPointsFromCurrentScan = parseScanLinesForTrilateration(scanText);
+        console.log("Parsed known points from D-scan for trilateration list:", knownPointsFromCurrentScan);
+    } else {
+        console.error("handleParseScanAndPrepareSelection: parseScanLinesForTrilateration function is not defined!");
+        return;
+    }
+
+    // Display these celestials for user selection
+    if (typeof displaySelectableCelestials === 'function') {
+        displaySelectableCelestials();
+    } else {
+        console.error("handleParseScanAndPrepareSelection: displaySelectableCelestials function is not defined!");
+    }
+}
+
+
   function displaySelectableCelestials() {
     if (
       !selectableCelestialsList ||
@@ -1103,43 +1014,12 @@ document.addEventListener("DOMContentLoaded", () => {
     selectableCelestialsContainer.style.display = "block";
   }
 
-  function updateSelectionCountAndButton() {
-    if (!selectionCountSpan || !trilaterateSelectedButton) return;
-    const count = selectedReferencePoints.length;
-    selectionCountSpan.textContent = `(${count}/3)`;
-    if (count === 3) {
-      trilaterateSelectedButton.style.display = "block";
-      trilaterateSelectedButton.disabled = false;
-    } else {
-      trilaterateSelectedButton.style.display = "none";
-      trilaterateSelectedButton.disabled = true;
-    }
-  }
 
-  function handleParseScanAndPrepareSelection() {
-    console.log("handleParseScanAndPrepareSelection called");
-    if (
-      !scanDataInput ||
-      !selectableCelestialsContainer ||
-      !trilaterateSelectedButton
-    ) {
-      console.error(
-        "Required UI elements for parsing D-scan selection not found."
-      );
-      return;
-    }
-    const scanText = scanDataInput.value;
-    if (!scanText.trim()) {
-      alert("Paste D-Scan data into the text area.");
-      selectableCelestialsContainer.style.display = "none";
-      trilaterateSelectedButton.style.display = "none";
-      return;
-    }
-    knownPointsFromCurrentScan = parseScanLinesForTrilateration(scanText);
-    displaySelectableCelestials();
-  }
+   
 
-  function handleTrilaterateSelected() {
+
+
+    function handleTrilaterateSelected() {
     // This is the function called after D-Scan point selection
     if (!currentSystemScaleFactor || currentSystemScaleFactor === 0) {
       alert("System scale factor not set. Please load a system map first.");
@@ -1382,11 +1262,11 @@ document.addEventListener("DOMContentLoaded", () => {
       console.error("Trilateration result was null or invalid:", scannerPosKm);
     }
   }
-
-  function handleClearScanText() {
+    function handleClearScanText() {
     if (scanDataInput) scanDataInput.value = "";
   }
-  function handleClearMarkers() {
+
+    function handleClearMarkers() {
     if (scanMarkersGroup) {
       while (scanMarkersGroup.firstChild) {
         scanMarkersGroup.removeChild(scanMarkersGroup.firstChild);
@@ -1539,7 +1419,8 @@ document.addEventListener("DOMContentLoaded", () => {
         toggleSignatureZonesButton.textContent = "Show Signature Zones";
     }
   }
-  function handleParseProbeData() {
+    
+    function handleParseProbeData() {
     console.log("handleParseProbeData: Called.");
     if (!scanDataInput) {
       console.error("Main scan data input area ('scanDataInput') not found.");
@@ -1603,8 +1484,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     displayParsedProbeSignatures();
   }
-
-  function displayParsedProbeSignatures() {
+    function displayParsedProbeSignatures() {
     console.log(
       "displayParsedProbeSignatures: Called with",
       parsedProbeSignatures.length,
@@ -1649,11 +1529,24 @@ document.addEventListener("DOMContentLoaded", () => {
       actionsCell.appendChild(linkButton);
     });
   }
-  /* --- Add Custom Marker Function --- */
+    function startLinkingSignature(signature) {
+    if (isLinkingProbeSignature) {
+      alert(
+        `Already linking "${signatureToLink.id}". Click map marker or cancel.`
+      );
+      return;
+    }
+    isLinkingProbeSignature = true;
+    signatureToLink = signature;
+    if (trilaterateSelectedButton) trilaterateSelectedButton.disabled = true;
+    if (parseScanButton) parseScanButton.disabled = true;
+    alert(
+      `LINKING MODE: Click label of an 'S' marker on map to link with ${signature.id}.`
+    );
+    console.log("Linking mode for sig:", signature);
+  }
 
-  // Inside SolarSystem.js
-
-function createAndPlotCustomMarker(id, labelText, shapeType, color, svgX, svgY) {
+    function createAndPlotCustomMarker(id, labelText, shapeType, color, svgX, svgY) {
     // svgX, svgY are the SVG coordinates where the user clicked (center of the marker)
     //console.log(`Creating Custom Marker: ID=${id}, Label=${labelText}, Shape=${shapeType}, Color=${color}, svgX=${svgX.toFixed(1)}, svgY=${svgY.toFixed(1)}`);
 
@@ -1803,56 +1696,27 @@ function createAndPlotCustomMarker(id, labelText, shapeType, color, svgX, svgY) 
     }
     console.log(`Custom marker "${labelText}" (ID: ${id}) added to map.`);
 }
+  
 
-  /* --- Ennd of Custom Marker Function --- */
+    // --- SECTION 3: Event Listener Attachments ---
+    console.log("Attaching event listeners...");
+    if (loadSystemButton) loadSystemButton.addEventListener('click', () => { const sysId = systemIdInput ? systemIdInput.value.trim() : null; if (sysId) fetchAndRenderSystem(sysId); else alert("Enter System Name."); });
+    if (parseScanButton) parseScanButton.addEventListener('click', handleParseScanAndPrepareSelection);
+    if (trilaterateSelectedButton) trilaterateSelectedButton.addEventListener('click', handleTrilaterateSelected);
+    if (parseProbeDataButton) parseProbeDataButton.addEventListener('click', handleParseProbeData);
+    if (toggleSignatureZonesButton) toggleSignatureZonesButton.addEventListener('click', toggleSignatureZones);
+    if (clearScanDataButton) clearScanDataButton.addEventListener('click', handleClearScanText);
+    if (clearMarkersButton) clearMarkersButton.addEventListener('click', handleClearMarkers);
+    if (prepareCustomMarkerButton) prepareCustomMarkerButton.addEventListener('click', () => { isAddingCustomMarkerMode = true; if(customMarkerControlsDiv) customMarkerControlsDiv.style.display = 'flex'; if(customMarkerInstructions) customMarkerInstructions.textContent = "Select shape & color, then CLICK ON MAP to place."; if(parseScanButton) parseScanButton.disabled = true; if(trilaterateSelectedButton) trilaterateSelectedButton.disabled = true; if(parseProbeDataButton) parseProbeDataButton.disabled = true; });
+    if (cancelCustomMarkerButton) cancelCustomMarkerButton.addEventListener('click', () => { isAddingCustomMarkerMode = false; if(customMarkerControlsDiv) customMarkerControlsDiv.style.display = 'none'; if(customMarkerInstructions) customMarkerInstructions.textContent = "Select shape & color, then CLICK ON MAP to place."; if(parseScanButton) parseScanButton.disabled = false; if(trilaterateSelectedButton && selectedReferencePoints && selectedReferencePoints.length === 3) trilaterateSelectedButton.disabled = false; else if (trilaterateSelectedButton) trilaterateSelectedButton.disabled = true; if(parseProbeDataButton) parseProbeDataButton.disabled = false; });
+    console.log("Event listeners attached.");
 
-  function startLinkingSignature(signature) {
-    if (isLinkingProbeSignature) {
-      alert(
-        `Already linking "${signatureToLink.id}". Click map marker or cancel.`
-      );
-      return;
-    }
-    isLinkingProbeSignature = true;
-    signatureToLink = signature;
-    if (trilaterateSelectedButton) trilaterateSelectedButton.disabled = true;
-    if (parseScanButton) parseScanButton.disabled = true;
-    alert(
-      `LINKING MODE: Click label of an 'S' marker on map to link with ${signature.id}.`
-    );
-    console.log("Linking mode for sig:", signature);
-  }
+    // --- SECTION 4: Initial Render Call ---
+    const defaultSystemName = "J121116"; 
+    if (typeof fetchAndRenderSystem === 'function') {
+        console.log(`Initial load for system: ${defaultSystemName}`);
+        fetchAndRenderSystem(defaultSystemName);
+    } else { console.error("fetchAndRenderSystem function is not defined!"); }
+    console.log("Script End (after DOMContentLoaded)."); 
 
-  // --- SECTION 3: Event Listener Attachments ---
-  if (parseScanButton)
-    parseScanButton.addEventListener(
-      "click",
-      handleParseScanAndPrepareSelection
-    );
-  if (trilaterateSelectedButton)
-    trilaterateSelectedButton.addEventListener(
-      "click",
-      handleTrilaterateSelected
-    );
-  if (toggleSignatureZonesButton)
-    toggleSignatureZonesButton.addEventListener("click", toggleSignatureZones);
-  if (clearScanDataButton)
-    clearScanDataButton.addEventListener("click", handleClearScanText);
-  if (clearMarkersButton)
-    clearMarkersButton.addEventListener("click", handleClearMarkers);
-  if (parseProbeDataButton)
-    parseProbeDataButton.addEventListener("click", handleParseProbeData);
-
-  // --- SECTION 4: Initial Render Call ---
-  if (typeof renderSystemSVG === "function") {
-    const defaultSystemName = "J121116"; // <<< CORRECTED: Pass name as a string
-    fetchAndRenderSystem(defaultSystemName); // Pass the name
-  } else {
-    console.error(
-      "renderSystemSVG function is not defined! Map cannot be drawn."
-    );
-  }
-  console.log("Script End (after DOMContentLoaded).");
-}); 
-
-// End of DOMContentLoaded listener
+}); // End of DOMContentLoaded listener
