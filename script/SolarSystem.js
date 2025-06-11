@@ -1,48 +1,63 @@
 // SolarSystem.js
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", () => { // <<<< SINGLE TOP-LEVEL DOMContentLoaded LISTENER
   
+  // --- SECTION 1: Data, Constants, and Global Variables ---
   let currentSystemCelestials = [];
+  let currentSystemScaleFactor = 1; // Initialize properly, will be set by renderSystemSVG
 
   const SVG_NS = "http://www.w3.org/2000/svg";
   const AU_KM = 149597870.7;
   const CEL_RADIUS_FACTOR = 0.05 * 0.25;
   const ORBIT_WIDTH_FACTOR = 0.0015;
 
+  // DOM Element References
+  // Add to your DOM element const declarations at the top
+  const toggleDScanRangeRingsButton = document.getElementById('toggleDScanRangeRingsButton');
+
   const svgElement = document.getElementById("solarSystemSVG");
   const infoBox = document.getElementById("infoBox");
-  const scanDataInput = document.getElementById("scanDataInput"); // THE ONE Textarea
+  const scanDataInput = document.getElementById("scanDataInput");
   const parseScanButton = document.getElementById("parseScanButton");
   const trilaterateSelectedButton = document.getElementById("trilaterateSelectedButton");
-  const parseProbeDataButton = document.getElementById("parseProbeDataButton"); // Button for probe data
+  const parseProbeDataButton = document.getElementById("parseProbeDataButton");
   const toggleSignatureZonesButton = document.getElementById("toggleSignatureZonesButton");
   const clearScanDataButton = document.getElementById("clearScanDataButton");
   const clearMarkersButton = document.getElementById("clearMarkersButton");
   const plottedMarkersTableBody = document.getElementById("plottedMarkersTableBody");
-  const probeScanTableBody = document.getElementById("probeScanTableBody"); // <<< ENSURE THIS IS CORRECTLY REFERENCED
+  const probeScanTableBody = document.getElementById("probeScanTableBody");
   const selectableCelestialsContainer = document.getElementById("selectableCelestialsContainer");
   const selectableCelestialsList = document.getElementById("selectableCelestialsList");
   const selectionCountSpan = document.getElementById("selectionCount");
-  /* - Add Custom Markers ---*/
-
+  
   const prepareCustomMarkerButton = document.getElementById("prepareCustomMarkerButton");
   const customMarkerControlsDiv = document.getElementById("customMarkerControls");
   const markerShapeSelect = document.getElementById("markerShape");
-  const markerColorSelect = document.getElementById("markerColor"); // Or markerColorPicker if using input type=color
+  const markerColorSelect = document.getElementById("markerColor");
   const cancelCustomMarkerButton = document.getElementById("cancelCustomMarkerButton");
   const customMarkerInstructions = document.getElementById("customMarkerInstructions");
+  
   const systemIdInput = document.getElementById("systemIdInput");
   const loadSystemButton = document.getElementById("loadSystemButton");
 
-  let isAddingCustomMarkerMode = false; // State variable
-  let customMarkerCounter = 0; // Separate counter for custom markers
-  /* -- END Of Custom Marker ----*/
+  // Modal UI Elements
+  const selectRefsModal = document.getElementById('selectRefsModal'); // Assuming this ID is in your HTML for the modal
+  const modalTitleCountSpan = document.getElementById('modalSelectionCount'); 
+  const modalSelectableCelestialsList = document.getElementById('modalSelectableCelestialsList');
+  const modalTrilaterateButton = document.getElementById('modalTrilaterateButton');
+  const modalCancelButton = document.getElementById('modalCancelButton');
 
-  let baseOrbitsGroup,
-    signatureZonesGroup,
-    celestialBodiesGroup,
-    scanMarkersGroup;
-  let currentSystemScaleFactor = 1;
+  // Header and System Info Box Spans
+  const hdrSysClassEl = document.getElementById('hdrSysClass');
+  const hdrSysEffectEl = document.getElementById('hdrSysEffect');
+  const hdrSysStaticsEl = document.getElementById('hdrSysStatics');
+  const sysClassEl = document.getElementById('sysClass');
+  const sysEffectEl = document.getElementById('sysEffect');
+  const sysStatic1El = document.getElementById('sysStatic1');
+  const sysStatic2El = document.getElementById('sysStatic2');
+
+  let baseOrbitsGroup, signatureZonesGroup, celestialBodiesGroup, scanMarkersGroup, dscanRangeCirclesGroup;
   let scannerPosMarkerCounter = 0;
+  let customMarkerCounter = 0;
   let plottedMarkerData = {};
   let selectedDragTarget = null;
   let dragInitiator = null;
@@ -53,129 +68,88 @@ document.addEventListener("DOMContentLoaded", () => {
   let parsedProbeSignatures = [];
   let isLinkingProbeSignature = false;
   let signatureToLink = null;
+  let isAddingCustomMarkerMode = false;
 
   console.log("Script Start: DOM loaded, constants and DOM elements defined.");
+  if (!probeScanTableBody) console.error("CRITICAL ERROR: probeScanTableBody element not found on script start!");
+  if (!plottedMarkersTableBody) console.error("CRITICAL ERROR: plottedMarkersTableBody element not found on script start!");
+  if (!selectRefsModal) console.warn("Modal 'selectRefsModal' not found. D-Scan selection UI will not work.");
   
  
   /* Function to use the data generated by the PHP Script db_test.php */
 
-  async function fetchAndRenderSystem(systemIdToLoad) {
+ async function fetchAndRenderSystem(systemIdentifier) {
+    console.log(`Fetching data for system: ${systemIdentifier}`);
+    if (svgElement) { svgElement.innerHTML = ''; }
+    if (plottedMarkersTableBody) plottedMarkersTableBody.innerHTML = "";
+    if (probeScanTableBody) probeScanTableBody.innerHTML = "";
+    if (selectableCelestialsContainer && selectableCelestialsContainer.style) selectableCelestialsContainer.style.display = "none"; // Old UI
+    if (selectRefsModal && selectRefsModal.style) selectRefsModal.style.display = "none"; // New Modal UI
     
-    console.log(`Fetching data for system ID: ${systemIdToLoad}`);
-
-    // Clear existing map and tables before loading new data
-   
-    if (svgElement) {
-        svgElement.innerHTML = ''; // Clear ALL SVG content (groups will be recreated)
-        console.log("Cleared svgElement innerHTML");
-    }
-    
-    // Clear SVG
-    if (plottedMarkersTableBody) plottedMarkersTableBody.innerHTML = ""; // Clear plotted markers table
-    if (probeScanTableBody) probeScanTableBody.innerHTML = ""; // Clear probe scan table
-
-      if (selectableCelestialsContainer) selectableCelestialsContainer.style.display = "none";
-    
-    // Reset counters and data stores
-    scannerPosMarkerCounter = 0;
-    plottedMarkerData = {};
-    parsedProbeSignatures = [];
-    selectedReferencePoints = [];
-    knownPointsFromCurrentScan = []; // Also clear this
+    currentSystemCelestials = []; 
+    scannerPosMarkerCounter = 0; customMarkerCounter = 0;
+    plottedMarkerData = {}; parsedProbeSignatures = [];
+    selectedReferencePoints = []; knownPointsFromCurrentScan = []; 
     if (typeof updateSelectionCountAndButton === 'function') updateSelectionCountAndButton();
-    // Reset linking state too
-    isLinkingProbeSignature = false;
-    signatureToLink = null;
+    isLinkingProbeSignature = false; signatureToLink = null; isAddingCustomMarkerMode = false;
+    if (customMarkerControlsDiv && customMarkerControlsDiv.style) customMarkerControlsDiv.style.display = 'none';
+    if (parseScanButton) parseScanButton.disabled = false;
+    if (trilaterateSelectedButton) trilaterateSelectedButton.disabled = true; 
+    if (parseProbeDataButton) parseProbeDataButton.disabled = false;
+    if (toggleSignatureZonesButton) toggleSignatureZonesButton.textContent = "Show Signature Zones";
+    if (signatureZonesGroup && signatureZonesGroup.style) signatureZonesGroup.style.display = 'none'; else if(signatureZonesGroup) signatureZonesGroup.innerHTML = '';
     
-    if (!probeScanTableBody)
-      console.error(
-        "CRITICAL ERROR: probeScanTableBody element not found on script start!"
-      );
-    
-      if (selectableCelestialsContainer)
-      selectableCelestialsContainer.style.display = "none"; // Hide selection UI
-    
-      // Reset counters and data stores related to markers
-    scannerPosMarkerCounter = 0;
-    plottedMarkerData = {};
-    parsedProbeSignatures = [];
-    selectedReferencePoints = [];
-    if (typeof updateSelectionCountAndButton === "function")
-      updateSelectionCountAndButton();
+    // Inside fetchAndRenderSystem(), in the initial reset section
+// ...
+if (dscanRangeCirclesGroup) {
+    while (dscanRangeCirclesGroup.firstChild) { dscanRangeCirclesGroup.removeChild(dscanRangeCirclesGroup.firstChild); }
+    dscanRangeCirclesGroup.style.display = 'none';
+}
+if (toggleDScanRangeRingsButton) toggleDScanRangeRingsButton.textContent = "Show D-Scan Rings";
+
+
+    console.log("All previous system state and UI cleared/reset for new system load.");
 
     try {
-      const response = await fetch("../db_test.php", {
-        // URL of your PHP script
-        method: "POST",
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded", // Or 'application/json' if PHP expects JSON
-        },
-        body: `systemID=${encodeURIComponent(systemIdToLoad)}`, // Send systemID as POST data
-        // If PHP expects JSON: body: JSON.stringify({ systemID: systemIdToLoad })
-      });
+        const response = await fetch('../db_test.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded', },
+            body: `systemID=${encodeURIComponent(systemIdentifier)}`
+        });
+        if (!response.ok) { const errorText = await response.text(); console.error("PHP Error:", errorText); throw new Error(`HTTP error ${response.status}`);}
+        const data = await response.json();
 
-      if (!response.ok) {
-        throw new Error(
-          `Network response was not ok: ${response.status} ${response.statusText}`
-        );
-      }
-
-      const data = await response.json(); // Expecting an array of celestial objects
-
-      // Process the fetched data - System Information
-
- if (data && data.systemInfo) {
-            const sysInfo = data.systemInfo;
-            const appTitle = document.getElementById('currentSystemTitleHeader');
-            if (appTitle) appTitle.textContent = `System Information - ${sysInfo.systemName || systemIdToLoad}`;
-            document.title = `EVE System Mapper - ${sysInfo.systemName || systemIdToLoad}`;
-
-            // Populate header details
-            document.getElementById('hdrSysClass').textContent = sysInfo.class || 'N/A';
-            document.getElementById('hdrSysEffect').textContent = sysInfo.effect || 'None';
-            let staticsText = "";
-            if (sysInfo.static1_type) {
-                staticsText += `${sysInfo.static1_type}${sysInfo.static1_leadsTo ? ' (' + sysInfo.static1_leadsTo + ')' : ''}`;
-            }
-            if (sysInfo.static2_type) {
-                if (staticsText !== "") staticsText += " / ";
-                staticsText += `${sysInfo.static2_type}${sysInfo.static2_leadsTo ? ' (' + sysInfo.static2_leadsTo + ')' : ''}`;
-            }
-            document.getElementById('hdrSysStatics').textContent = staticsText || 'None';
-
-            // Populate main system info box
-            document.getElementById('sysClass').textContent = sysInfo.class || 'N/A';
-            document.getElementById('sysEffect').textContent = sysInfo.effect || 'None';
-            // For detailed statics, you might want separate spans for type and leadsTo
-            document.getElementById('sysStatic1').textContent = `${sysInfo.static1_type || 'N/A'}${sysInfo.static1_leadsTo ? ' -> ' + sysInfo.static1_leadsTo : ''}`;
-            document.getElementById('sysStatic2').textContent = `${sysInfo.static2_type || 'N/A'}${sysInfo.static2_leadsTo ? ' -> ' + sysInfo.static2_leadsTo : ''}`;
-        } else {
-            console.warn("No systemInfo received for system:", systemIdToLoad);
-            // Clear fields if no info
-            const appTitle = document.getElementById('currentSystemTitleHeader');
-            if (appTitle) appTitle.textContent = `System Information - ${systemIdToLoad} (Info N/A)`;
-            // ... clear other info fields ...
+        if (data && data.systemInfo) {
+            const si = data.systemInfo;
+            const appTitleH1 = document.getElementById('currentSystemTitleHeader');
+            if (appTitleH1) appTitleH1.textContent = `System Information - ${si.systemName || systemIdentifier}`;
+            document.title = `EVE System Mapper - ${si.systemName || systemIdentifier}`;
+            if(hdrSysClassEl) hdrSysClassEl.textContent = si.class || 'N/A';
+            if(hdrSysEffectEl) hdrSysEffectEl.textContent = si.effect || 'None';
+            let staticsCombined = "";
+            if (si.static1_type) staticsCombined += `${si.static1_type}${si.static1_leadsTo ? ' ('+si.static1_leadsTo+')' : ''}`;
+            if (si.static2_type) staticsCombined += `${staticsCombined ? ' / ' : ''}${si.static2_type}${si.static2_leadsTo ? ' ('+si.static2_leadsTo+')' : ''}`;
+            if(hdrSysStaticsEl) hdrSysStaticsEl.textContent = staticsCombined || 'None';
+            if(sysClassEl) sysClassEl.textContent = si.class || 'N/A';
+            if(sysEffectEl) sysEffectEl.textContent = si.effect || 'None';
+            if(sysStatic1El) sysStatic1El.textContent = `${si.static1_type || 'N/A'}${si.static1_leadsTo ? ' -> ' + si.static1_leadsTo : ''}`;
+            if(sysStatic2El) sysStatic2El.textContent = `${si.static2_type || 'N/A'}${si.static2_leadsTo ? ' -> ' + si.static2_leadsTo : ''}`;
+        } else { 
+            console.warn("No systemInfo received for system:", systemIdentifier);
+            const appTitleH1 = document.getElementById('currentSystemTitleHeader');
+            if (appTitleH1) appTitleH1.textContent = `System Information - ${systemIdentifier} (Info N/A)`;
+            if(hdrSysClassEl) hdrSysClassEl.textContent = 'N/A'; if(hdrSysEffectEl) hdrSysEffectEl.textContent = 'N/A'; if(hdrSysStaticsEl) hdrSysStaticsEl.textContent = 'N/A';
+            if(sysClassEl) sysClassEl.textContent = 'N/A'; if(sysEffectEl) sysEffectEl.textContent = 'N/A'; if(sysStatic1El) sysStatic1El.textContent = 'N/A'; if(sysStatic2El) sysStatic2El.textContent = 'N/A';
         }
 
-        // --- Process celestials ---
-        if (data && data.celestials && data.celestials.length > 0) {
-            currentSystemCelestials = data.celestials; 
-            if (typeof renderSystemSVG === 'function') {
-                renderSystemSVG(currentSystemCelestials); 
-            } else { console.error("renderSystemSVG is not defined!"); }
-        } else {
-            currentSystemCelestials = []; // Clear if no celestials
-            if (svgElement) svgElement.innerHTML = ''; // Clear map
-            console.error('No celestial data received for system ID:', systemIdToLoad);
-            alert(`No celestial data found for system ID: ${systemIdToLoad}. Map cannot be drawn.`);
-        }
-
-    } catch (error) {
-      console.error("Error fetching system data:", error);
-      alert(`Error loading system data: ${error.message}`);
-      const appTitle = document.querySelector("#appHeader h1");
-      if (appTitle) appTitle.textContent = `System Information - ERROR`;
-    }
+        let celestialsToRender = [];
+        if (data && data.celestials && data.celestials.length > 0) celestialsToRender = data.celestials;
+        else if (data && Array.isArray(data) && data.length > 0 && !data.systemInfo) celestialsToRender = data;
+        
+        currentSystemCelestials = celestialsToRender;
+        if (currentSystemCelestials.length > 0) { if (typeof renderSystemSVG === 'function') renderSystemSVG(currentSystemCelestials); }
+        else { if (svgElement) svgElement.innerHTML = ''; console.error('No celestial data for ID:', systemIdentifier); alert(`No celestial data for ${systemIdentifier}.`); }
+    } catch (error) { console.error('Error fetching/processing system data:', error); alert(`Error loading system: ${error.message}`); }
   }
 
   // ---- END
@@ -268,6 +242,16 @@ document.addEventListener("DOMContentLoaded", () => {
   function renderSystemSVG(celestialDataForSystem) {
     
     console.log("renderSystemSVG: Called with data for system.");
+
+    console.log("renderSystemSVG: Called with data length:", celestialDataForSystem ? celestialDataForSystem.length : 'undefined');
+    if (!svgElement) { console.error("renderSystemSVG: svgElement not found!"); return; }
+    // svgElement.innerHTML = ''; // This is now done in fetchAndRenderSystem BEFORE this is called
+
+    if (!celestialDataForSystem || celestialDataForSystem.length === 0) {
+        console.error("renderSystemSVG called with no celestial data. Map cannot be drawn.");
+        return;
+    }
+
     if (!celestialDataForSystem || celestialDataForSystem.length === 0) {
       console.error("renderSystemSVG called with no celestial data.");
       return;
@@ -279,24 +263,30 @@ document.addEventListener("DOMContentLoaded", () => {
     // calculateOrbitalProperties should also operate on the processed objects from the current system
     calculateOrbitalProperties(systemObject.cels);
 
-    //svgElement.innerHTML = '';
+    svgElement.innerHTML = '';
 
-    baseOrbitsGroup = document.createElementNS(SVG_NS, "g");
+        // --- RECREATE ALL SVG GROUPS ---
+    baseOrbitsGroup = document.createElementNS(SVG_NS, "g"); 
     baseOrbitsGroup.setAttribute("id", "baseOrbitsGroup");
-    svgElement.appendChild(baseOrbitsGroup);
+    svgElement.appendChild(baseOrbitsGroup); // Layer 1 (Bottom)
 
-    signatureZonesGroup = document.createElementNS(SVG_NS, "g");
+    signatureZonesGroup = document.createElementNS(SVG_NS, "g"); 
     signatureZonesGroup.setAttribute("id", "signatureZonesGroup");
-    signatureZonesGroup.style.display = "none";
-    svgElement.appendChild(signatureZonesGroup);
+    signatureZonesGroup.style.display = 'none'; 
+    svgElement.appendChild(signatureZonesGroup); // Layer 2
 
-    celestialBodiesGroup = document.createElementNS(SVG_NS, "g");
+    // --- D-SCAN RANGE CIRCLES GROUP ---
+    dscanRangeCirclesGroup = document.createElementNS(SVG_NS, "g"); 
+    dscanRangeCirclesGroup.setAttribute("id", "dscanRangeCirclesGroup");
+    svgElement.appendChild(dscanRangeCirclesGroup); // Layer 3 << DRAWN HERE
+
+    celestialBodiesGroup = document.createElementNS(SVG_NS, "g"); 
     celestialBodiesGroup.setAttribute("id", "celestialBodiesGroup");
-    svgElement.appendChild(celestialBodiesGroup);
+    svgElement.appendChild(celestialBodiesGroup); // Layer 4 (Planets, etc. on top of range circles)
 
-    scanMarkersGroup = document.createElementNS(SVG_NS, "g");
+    scanMarkersGroup = document.createElementNS(SVG_NS, "g"); 
     scanMarkersGroup.setAttribute("id", "scanMarkersGroup");
-    svgElement.appendChild(scanMarkersGroup);
+    svgElement.appendChild(scanMarkersGroup); // Layer 5 (S-Markers, Custom Markers on very top)
 
     const viewSize = 600;
     const halfViewSize = viewSize / 2;
@@ -742,98 +732,164 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  function displaySelectableCelestials() {
-    if (
-      !selectableCelestialsList ||
-      !selectableCelestialsContainer ||
-      !selectionCountSpan
-    )
-      return;
-    selectableCelestialsList.innerHTML = "";
-    selectedReferencePoints = [];
-    updateSelectionCountAndButton();
+   // This function now populates the MODAL for D-Scan ref selection
+  // Inside SolarSystem.js
+function displaySelectableCelestials() {
+    if (!modalSelectableCelestialsList || !selectRefsModal || !modalTitleCountSpan) {
+        console.error("displaySelectableCelestials: Modal UI elements missing.");
+        return;
+    }
+    console.log("displaySelectableCelestials (MODAL): Clearing and resetting selections.");
+    modalSelectableCelestialsList.innerHTML = ''; 
+    selectedReferencePoints = []; // CRITICAL: Reset this global array
+    updateSelectionCountAndButton(); // Update to (0/3) and disable button
 
-    if (
-      !knownPointsFromCurrentScan ||
-      knownPointsFromCurrentScan.length === 0
-    ) {
-      selectableCelestialsList.innerHTML =
-        "<p style='color: #888;'>No known celestials with distances found in scan data.</p>";
-      //selectableCelestialsContainer.style.display = "block";
-      if (selectableCelestialsContainer)
-        selectableCelestialsContainer.style.display = "flex";
-      return;
+    if (!knownPointsFromCurrentScan || knownPointsFromCurrentScan.length === 0) {
+        modalSelectableCelestialsList.innerHTML = "<p style='color: #888;'>No known celestials with distances found in scan data.</p>";
+        if (selectRefsModal) selectRefsModal.style.display = 'flex';
+        return;
     }
     if (knownPointsFromCurrentScan.length < 3) {
-      selectableCelestialsList.innerHTML = `<p style='color: #ff8888;'>Need at least 3 known celestials with distances for trilateration. Found ${knownPointsFromCurrentScan.length}.</p>`;
-      selectableCelestialsContainer.style.display = "block";
-      return;
+        modalSelectableCelestialsList.innerHTML = `<p style='color: #ff8888;'>Need at least 3 known celestials for trilateration. Found ${knownPointsFromCurrentScan.length}.</p>`;
+        // Still list them, but they won't be fully functional for selection
+        knownPointsFromCurrentScan.forEach((point) => {
+            const itemDiv = document.createElement('div');
+            itemDiv.classList.add('celestial-item'); // Keep class for consistent styling
+            itemDiv.style.cursor = 'default';    // Indicate not selectable for trilateration
+            itemDiv.style.opacity = '0.7';
+            itemDiv.textContent = `${point.name} (${(point.d / AU_KM).toFixed(2)} AU)`;
+            modalSelectableCelestialsList.appendChild(itemDiv);
+        });
+        if (selectRefsModal) selectRefsModal.style.display = 'flex';
+        return;
     }
-    knownPointsFromCurrentScan.forEach((point, index) => {
-      const itemDiv = document.createElement("div");
-      itemDiv.classList.add("celestial-item");
-      itemDiv.textContent = `${point.name} (${(point.d / AU_KM).toFixed(
-        2
-      )} AU)`;
-      itemDiv.dataset.pointIndex = index.toString();
+    
+    console.log("displaySelectableCelestials (MODAL): Populating list with selectable items.");
+    knownPointsFromCurrentScan.forEach((point) => { // Removed 'index' as dataset.pointIndex isn't crucial if 'point' is used
+        const itemDiv = document.createElement('div');
+        itemDiv.classList.add('celestial-item');
+        itemDiv.textContent = `${point.name} (${(point.d / AU_KM).toFixed(2)} AU)`;
+        // itemDiv.dataset.pointName = point.name; // Store name for easier removal if needed
 
-      itemDiv.addEventListener("click", () => {
-        const alreadySelected = itemDiv.classList.contains("selected");
-        if (alreadySelected) {
-          itemDiv.classList.remove("selected");
-          selectedReferencePoints = selectedReferencePoints.filter(
-            (p) => p.name !== point.name
-          );
-        } else {
-          if (selectedReferencePoints.length < 3) {
-            itemDiv.classList.add("selected");
-            selectedReferencePoints.push(point);
-          } else {
-            alert("You can only select up to 3 reference points.");
-          }
-        }
-        updateSelectionCountAndButton();
-      });
-      selectableCelestialsList.appendChild(itemDiv);
+        itemDiv.addEventListener('click', function() { 
+            console.log("MODAL Celestial item CLICKED:", this.textContent); 
+
+            // 'point' is the actual object from knownPointsFromCurrentScan for this itemDiv
+            const isCurrentlySelected = selectedReferencePoints.includes(point);
+
+            if (isCurrentlySelected) {
+                this.classList.remove('selected');
+                selectedReferencePoints = selectedReferencePoints.filter(p => p !== point); 
+                console.log(`Deselected ${point.name}. New selection count: ${selectedReferencePoints.length}`);
+            } else {
+                if (selectedReferencePoints.length < 3) {
+                    this.classList.add('selected');
+                    selectedReferencePoints.push(point); 
+                    console.log(`Selected ${point.name}. New selection count: ${selectedReferencePoints.length}`);
+                } else {
+                    alert("You can only select up to 3 reference points.");
+                }
+            }
+            // console.log("Selected points array:", selectedReferencePoints.map(p => p.name)); // For debugging
+            updateSelectionCountAndButton();
+        });
+        modalSelectableCelestialsList.appendChild(itemDiv);
     });
-    selectableCelestialsContainer.style.display = "block";
-  }
+    if (selectRefsModal) selectRefsModal.style.display = 'flex';
+    console.log("displaySelectableCelestials (MODAL): List populated and modal shown.");
+}
 
-  function updateSelectionCountAndButton() {
-    if (!selectionCountSpan || !trilaterateSelectedButton) return;
+  // This function now updates the MODAL's counter and trilaterate button
+function updateSelectionCountAndButton() {
+    if (!modalTitleCountSpan || !modalTrilaterateButton) { 
+        console.warn("updateSelectionCountAndButton: Modal UI elements for count/button not found. Cannot update.");
+        return; 
+    }
+
     const count = selectedReferencePoints.length;
-    selectionCountSpan.textContent = `(${count}/3)`;
-    if (count === 3) {
-      trilaterateSelectedButton.style.display = "block";
-      trilaterateSelectedButton.disabled = false;
-    } else {
-      trilaterateSelectedButton.style.display = "none";
-      trilaterateSelectedButton.disabled = true;
-    }
-  }
+    modalTitleCountSpan.textContent = `(${count}/3)`;
+    // console.log("Updated modal selection count to:", modalTitleCountSpan.textContent); // Already logged if successful
 
-  function handleParseScanAndPrepareSelection() {
+    if (count === 3) {
+        modalTrilaterateButton.disabled = false; // Enable the button
+        // modalTrilaterateButton.style.display = 'inline-block'; // Ensure it's visible if previously hidden
+        console.log("Modal trilaterate button ENABLED.");
+    } else {
+        modalTrilaterateButton.disabled = true; // Disable the button
+        // modalTrilaterateButton.style.display = 'none'; // Or hide it
+        console.log("Modal trilaterate button DISABLED. Count:", count);
+    }
+}
+
+// Inside SolarSystem.js
+
+function handleParseScanAndPrepareSelection() {
     console.log("handleParseScanAndPrepareSelection called");
-    if (
-      !scanDataInput ||
-      !selectableCelestialsContainer ||
-      !trilaterateSelectedButton
-    ) {
-      console.error(
-        "Required UI elements for parsing D-scan selection not found."
-      );
-      return;
+
+    // 1. Ensure scanDataInput element exists
+    if (!scanDataInput) { 
+        console.error("handleParseScanAndPrepareSelection: Main scanDataInput element not found!");
+        alert("Error: Scan input area element is missing. Please refresh the page.");
+        return;
     }
-    const scanText = scanDataInput.value;
-    if (!scanText.trim()) {
-      alert("Paste D-Scan data into the text area.");
-      selectableCelestialsContainer.style.display = "none";
-      trilaterateSelectedButton.style.display = "none";
-      return;
+
+    // 2. Get the scanText value
+    const scanText = scanDataInput.value; 
+
+    // 3. Clear previous D-Scan range circles first.
+    //    This is fine to do even if scanText is empty later, ensures a clean slate.
+   if (dscanRangeCirclesGroup) {
+        while (dscanRangeCirclesGroup.firstChild) {
+            dscanRangeCirclesGroup.removeChild(dscanRangeCirclesGroup.firstChild);
+        }
+        dscanRangeCirclesGroup.style.display = 'none'; // Ensure hidden
     }
-    knownPointsFromCurrentScan = parseScanLinesForTrilateration(scanText);
-    displaySelectableCelestials();
-  }
+    if (toggleDScanRangeRingsButton) { // Reset toggle button text
+         toggleDScanRangeRingsButton.textContent = "Show D-Scan Rings";
+    }
+    
+
+    // 4. Handle empty scan input
+    if (!scanText.trim()) { 
+        alert("Paste D-Scan data into the text area.");
+        if (selectRefsModal && selectRefsModal.style.display !== 'none') { // If using modal
+            selectRefsModal.style.display = 'none';
+        } else if (selectableCelestialsContainer && selectableCelestialsContainer.style) { // If using old in-page one
+            selectableCelestialsContainer.style.display = 'none';
+        }
+        if (trilaterateSelectedButton) trilaterateSelectedButton.style.display = 'none';
+        
+        knownPointsFromCurrentScan = []; 
+        selectedReferencePoints = [];    
+        if(typeof updateSelectionCountAndButton === 'function') {
+            updateSelectionCountAndButton(); 
+        }
+        return; 
+    }
+
+    // 5. Parse the scan text for known celestials
+    if (typeof parseScanLinesForTrilateration === 'function') {
+        knownPointsFromCurrentScan = parseScanLinesForTrilateration(scanText); // scanText is now defined
+        console.log("Parsed known points from D-scan for trilateration list:", knownPointsFromCurrentScan);
+    } else {
+        console.error("handleParseScanAndPrepareSelection: parseScanLinesForTrilateration function is not defined!");
+        return; 
+    }
+
+    // 6. Draw all D-Scan range circles on the main map
+    if (typeof drawAllScannedRangeCircles === 'function') {
+        drawAllScannedRangeCircles(knownPointsFromCurrentScan); 
+    } else {
+        console.warn("handleParseScanAndPrepareSelection: drawAllScannedRangeCircles function is not defined (this feature might be off).");
+    }
+
+    // 7. Call displaySelectableCelestials to populate and show the MODAL (or old UI)
+    if (typeof displaySelectableCelestials === 'function') {
+        displaySelectableCelestials(); 
+    } else {
+        console.error("handleParseScanAndPrepareSelection: displaySelectableCelestials function is not defined!");
+    }
+}
 
   function handleTrilaterateSelected() {
 
@@ -984,48 +1040,41 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function handleClearMarkers() {
-    if (scanMarkersGroup) {
-      while (scanMarkersGroup.firstChild) {
-        scanMarkersGroup.removeChild(scanMarkersGroup.firstChild);
-      }
+    // svgElement.innerHTML = ''; // This would wipe out the base map too if called standalone.
+    // Better to clear specific groups.
+    if (scanMarkersGroup) { // For S-markers and Custom Markers
+        while (scanMarkersGroup.firstChild) { scanMarkersGroup.removeChild(scanMarkersGroup.firstChild); }
     }
-    if (plottedMarkersTableBody) plottedMarkersTableBody.innerHTML = "";
-    if (probeScanTableBody) probeScanTableBody.innerHTML = "";
-    if (!probeScanTableBody)
-      console.error(
-        "CRITICAL ERROR: probeScanTableBody element not found on script start!"
-      );
-    scannerPosMarkerCounter = 0;
+    
+if (dscanRangeCirclesGroup) { // For D-Scan range circles
+        while (dscanRangeCirclesGroup.firstChild) { dscanRangeCirclesGroup.removeChild(dscanRangeCirclesGroup.firstChild); }
+    }
 
-    /* reset the Custom Marker */
-    customMarkerCounter = 0;
-    /* --- END --- */
+    // Note: signatureZonesGroup is handled by its own toggle function.
 
-    plottedMarkerData = {};
-    parsedProbeSignatures = [];
-    if (selectableCelestialsContainer)
-      selectableCelestialsContainer.style.display = "none";
-    if (trilaterateSelectedButton)
-      trilaterateSelectedButton.style.display = "none";
-    selectedReferencePoints = [];
-    if (
-      selectionCountSpan &&
-      typeof updateSelectionCountAndButton === "function"
-    )
-      updateSelectionCountAndButton();
-    isLinkingProbeSignature = false;
-    signatureToLink = null;
+    if (plottedMarkersTableBody) plottedMarkersTableBody.innerHTML = '';
+    if (probeScanTableBody) probeScanTableBody.innerHTML = ''; 
+    
+    scannerPosMarkerCounter = 0; customMarkerCounter = 0;
+    plottedMarkerData = {}; parsedProbeSignatures = [];
+    
+    if (selectableCelestialsContainer) selectableCelestialsContainer.style.display = 'none';
+    if (trilaterateSelectedButton) trilaterateSelectedButton.style.display = 'none';
+    selectedReferencePoints = []; knownPointsFromCurrentScan = [];
+    
+    if (selectionCountSpan && typeof updateSelectionCountAndButton === 'function') updateSelectionCountAndButton();
+    isLinkingProbeSignature = false; signatureToLink = null; isAddingCustomMarkerMode = false;
+    if (customMarkerControlsDiv) customMarkerControlsDiv.style.display = 'none';
+    
+    // Reset button states
     if (parseScanButton) parseScanButton.disabled = false;
-    if (
-      trilaterateSelectedButton &&
-      typeof selectedReferencePoints !== "undefined" &&
-      selectedReferencePoints.length === 3
-    )
-      trilaterateSelectedButton.disabled = false;
-    else if (trilaterateSelectedButton)
-      trilaterateSelectedButton.disabled = true;
-    console.log("All markers and all tables cleared. Linking state reset.");
-  }
+    if (trilaterateSelectedButton) trilaterateSelectedButton.disabled = true;
+    if (parseProbeDataButton) parseProbeDataButton.disabled = false;
+
+    if (selectRefsModal) selectRefsModal.style.display = 'none'; // Hide modal
+    
+    console.log("All interactive markers and related UI cleared.");
+}
 
   function toggleSignatureZones() {
     console.log("toggleSignatureZones: Called.");
@@ -1136,6 +1185,7 @@ document.addEventListener("DOMContentLoaded", () => {
         toggleSignatureZonesButton.textContent = "Show Signature Zones";
     }
   }
+
   function handleParseProbeData() {
     console.log("handleParseProbeData: Called.");
     if (!scanDataInput) {
@@ -1402,7 +1452,7 @@ function createAndPlotCustomMarker(id, labelText, shapeType, color, svgX, svgY) 
 }
 
 // --- NEW Reusable Function for Label Interaction ---
-   function handleMarkerLabelClick(event, markerGroupIdFromEvent, initialDefaultLabel) {
+function handleMarkerLabelClick(event, markerGroupIdFromEvent, initialDefaultLabel) {
     
      event.stopPropagation(); // Good to keep this to prevent other clicks if needed
 
@@ -1528,74 +1578,200 @@ function createAndPlotCustomMarker(id, labelText, shapeType, color, svgX, svgY) 
     console.log("--- handleMarkerLabelClick END ---"); // Log 16
 }
 
-  /* --- End of Custom Marker Function --- */
-  
-  // System Load
-   if (loadSystemButton) {
-        loadSystemButton.addEventListener("click", () => {
-            const systemIdentifier = systemIdInput ? systemIdInput.value.trim() : null;
-            if (systemIdentifier && typeof fetchAndRenderSystem === 'function') {
-                fetchAndRenderSystem(systemIdentifier);
-            } else if (!systemIdentifier) {
-                alert("Please enter a System Name or ID.");
+
+// -- Function to draw range rings on celestials -----
+// Place this in SECTION 2: ALL FUNCTION DEFINITIONS
+
+function drawAllScannedRangeCircles(scannedPoints) {
+    if (!dscanRangeCirclesGroup) {
+        console.warn("drawAllScannedRangeCircles: dscanRangeCirclesGroup not ready.");
+        // Attempt to create it if it was missed, though renderSystemSVG should handle it.
+        dscanRangeCirclesGroup = document.createElementNS(SVG_NS, "g");
+        dscanRangeCirclesGroup.setAttribute("id", "dscanRangeCirclesGroup");
+        if (svgElement && celestialBodiesGroup) {
+            svgElement.insertBefore(dscanRangeCirclesGroup, celestialBodiesGroup);
+        } else if (svgElement) {
+            svgElement.appendChild(dscanRangeCirclesGroup);
+        } else { return; } // Cannot proceed
+    }
+    
+    while (dscanRangeCirclesGroup.firstChild) { // Clear previous
+        dscanRangeCirclesGroup.removeChild(dscanRangeCirclesGroup.firstChild);
+    }
+
+    if (!scannedPoints || scannedPoints.length === 0) return;
+    if (typeof currentSystemScaleFactor !== 'number' || currentSystemScaleFactor === 0 || isNaN(currentSystemScaleFactor)) {
+        console.error("drawAllScannedRangeCircles: Invalid currentSystemScaleFactor."); return;
+    }
+
+    let circlesDrawn = 0;
+    scannedPoints.forEach(point => {
+        if (isNaN(point.x) || isNaN(point.y) || isNaN(point.d) || point.d <= 0) return;
+
+        // Center of the circle is the celestial's known map position from rawSystemData/currentSystemCelestials
+        // point.x is celestial.X (km), point.y is celestial.Z (km)
+        const centerX_svg = point.x * currentSystemScaleFactor;
+        const centerY_svg = point.y * currentSystemScaleFactor; 
+        
+        // Radius of the circle is the SCANNED DISTANCE 'd' (km) to that celestial
+        const radius_svg = point.d * currentSystemScaleFactor; 
+
+        if (radius_svg <= 0) return;
+
+        const circle = document.createElementNS(SVG_NS, "circle");
+        circle.setAttribute("cx", centerX_svg.toString());
+        circle.setAttribute("cy", centerY_svg.toString());
+        circle.setAttribute("r", radius_svg.toString());
+        // Styling is applied via CSS selector: #dscanRangeCirclesGroup circle
+        
+        circle.dataset.celestialName = point.name; // For potential highlighting
+        dscanRangeCirclesGroup.appendChild(circle);
+        circlesDrawn++;
+    });
+    console.log(`Drew ${circlesDrawn} D-Scan range circles into #dscanRangeCirclesGroup.`);
+}
+// --- Display Selectable Celestials in MODAL --- //
+
+function displaySelectableCelestials() {
+    if (!modalSelectableCelestialsList || !selectRefsModal || !modalTitleCountSpan) {
+        console.error("displaySelectableCelestials: Modal UI elements missing."); return;
+    }
+    // console.log("displaySelectableCelestials (MODAL): Clearing and resetting selections."); // Already confirmed
+    modalSelectableCelestialsList.innerHTML = ''; 
+    selectedReferencePoints = [];          
+    updateSelectionCountAndButton(); 
+
+    if (!knownPointsFromCurrentScan || knownPointsFromCurrentScan.length === 0) { /* ... empty message ... */ return; }
+    if (knownPointsFromCurrentScan.length < 3) { /* ... need more points message + list non-selectable items ... */ return; }
+    
+    // console.log("displaySelectableCelestials (MODAL): Populating list with selectable items."); // Already confirmed
+    knownPointsFromCurrentScan.forEach((point) => { 
+        const itemDiv = document.createElement('div');
+        itemDiv.classList.add('celestial-item');
+        itemDiv.textContent = `${point.name} (${(point.d / AU_KM).toFixed(2)} AU)`;
+        
+        itemDiv.addEventListener('click', function() { 
+            console.log("--- itemDiv Click Listener START ---"); // Log A
+            console.log("Clicked item text:", this.textContent);
+            console.log("Associated point object:", point); // 'point' is from the forEach closure
+
+            const isCurrentlySelected = selectedReferencePoints.includes(point);
+            console.log("Is currently selected:", isCurrentlySelected); // Log B
+
+            if (isCurrentlySelected) {
+                this.classList.remove('selected');
+                console.log("Removed .selected class from:", this.textContent); // Log C
+                selectedReferencePoints = selectedReferencePoints.filter(p => p !== point); 
+                console.log(`Deselected ${point.name}. Current selectedReferencePoints:`, selectedReferencePoints.map(p=>p.name)); // Log D
             } else {
-                console.error("fetchAndRenderSystem is not defined.");
+                console.log("Not currently selected. Selected points length:", selectedReferencePoints.length); // Log E
+                if (selectedReferencePoints.length < 3) {
+                    this.classList.add('selected');
+                    console.log("Added .selected class to:", this.textContent); // Log F
+                    selectedReferencePoints.push(point); 
+                    console.log(`Selected ${point.name}. Current selectedReferencePoints:`, selectedReferencePoints.map(p=>p.name)); // Log G
+                } else {
+                    alert("You can only select up to 3 reference points.");
+                    console.log("Attempted to select more than 3; limit reached."); // Log H
+                }
             }
+            console.log("Calling updateSelectionCountAndButton from itemDiv click."); // Log I
+            updateSelectionCountAndButton();
+            // highlightSelectedReferenceCircles(); // Still keep commented
+            console.log("--- itemDiv Click Listener END ---"); // Log J
         });
-    } else { console.error("loadSystemButton not found"); }
+        modalSelectableCelestialsList.appendChild(itemDiv);
+    });
+    if (selectRefsModal) selectRefsModal.style.display = 'flex';
+    // console.log("displaySelectableCelestials (MODAL): List populated and modal shown."); // Already confirmed
+}
 
-  // D-Scan Trilateration Flow
-    if (parseScanButton && typeof handleParseScanAndPrepareSelection === 'function') {
-        parseScanButton.addEventListener('click', handleParseScanAndPrepareSelection);
-    } else { console.error("parseScanButton or its handler not found/defined"); }
+//--Now uodates the modal's title count span
 
-    if (trilaterateSelectedButton && typeof handleTrilaterateSelected === 'function') {
-        trilaterateSelectedButton.addEventListener('click', handleTrilaterateSelected);
-    } else { console.error("trilaterateSelectedButton or its handler not found/defined"); }
+function updateSelectionCountAndButton() {
+    console.log("--- updateSelectionCountAndButton START ---"); // Log K
+    if (!modalTitleCountSpan || !modalTrilaterateButton) { 
+        console.warn("updateSelectionCountAndButton: Modal count span or trilaterate button not found. Cannot update.");
+        console.log("modalTitleCountSpan:", modalTitleCountSpan);
+        console.log("modalTrilaterateButton:", modalTrilaterateButton);
+        return; 
+    }
 
-  // Probe Scan Flow
-    if (parseProbeDataButton && typeof handleParseProbeData === 'function') {
-        parseProbeDataButton.addEventListener('click', handleParseProbeData);
-    } else { console.error("parseProbeDataButton or its handler not found/defined"); }
-  
-  // Other Controls
-    if (toggleSignatureZonesButton && typeof toggleSignatureZones === 'function') {
-        toggleSignatureZonesButton.addEventListener('click', toggleSignatureZones);
-    } else { console.error("toggleSignatureZonesButton or its handler not found/defined"); }
+    const count = selectedReferencePoints.length;
+    console.log("  Current selectedReferencePoints count:", count); // Log L
+    
+    modalTitleCountSpan.textContent = `(${count}/3)`;
+    console.log("  Updated modal selection count display to:", modalTitleCountSpan.textContent); // Log M
 
-    if (clearScanDataButton && typeof handleClearScanText === 'function') {
-        clearScanDataButton.addEventListener('click', handleClearScanText);
-    } else { console.error("clearScanDataButton or its handler not found/defined"); }
+    if (count === 3) {
+        modalTrilaterateButton.disabled = false; 
+        console.log("  Modal trilaterate button ENABLED."); // Log N
+    } else {
+        modalTrilaterateButton.disabled = true; 
+        console.log("  Modal trilaterate button DISABLED."); // Log O
+    }
+    console.log("--- updateSelectionCountAndButton END ---"); // Log P
+}
 
-    if (clearMarkersButton && typeof handleClearMarkers === 'function') {
-        clearMarkersButton.addEventListener('click', handleClearMarkers);
-    } else { console.error("clearMarkersButton or its handler not found/defined"); }
+function handleModalTrilaterate() {
+        console.log("Modal 'Trilaterate with Selected' button clicked.");
+        if (typeof handleTrilaterateSelected === 'function') {
+            handleTrilaterateSelected(); // Call the existing main trilateration function
+        } else {
+            console.error("handleTrilaterateSelected function is not defined!");
+        }
+        // Hide the modal after attempting trilateration
+        if (selectRefsModal) {
+            selectRefsModal.style.display = 'none';
+        }
+    }
 
-    // Custom Marker Controls Event Listeners
-    if (prepareCustomMarkerButton && customMarkerControlsDiv && typeof handleBodyMouseMoveSVG !== 'undefined') { // handleBodyMouseMoveSVG was removed, so this condition might change
-        prepareCustomMarkerButton.addEventListener("click", () => {
-            isAddingCustomMarkerMode = true;
-            console.log("prepareCustomMarkerButton clicked: isAddingCustomMarkerMode set to true");
-            customMarkerControlsDiv.style.display = "flex";
-            if (customMarkerInstructions) customMarkerInstructions.textContent = "Select shape & color, then CLICK ON MAP to place. You'll be prompted for a label.";
-            if (parseScanButton) parseScanButton.disabled = true;
-            if (trilaterateSelectedButton) trilaterateSelectedButton.disabled = true;
-            if (parseProbeDataButton) parseProbeDataButton.disabled = true;
-        });
-    } else { console.error("prepareCustomMarkerButton or customMarkerControlsDiv not found/defined for custom markers."); }
+function handleModalCancel() {
+    console.log("Modal 'Cancel Selection' button clicked.");
+    if (selectRefsModal) selectRefsModal.style.display = 'none';
+    selectedReferencePoints = []; 
+    if (typeof dscanRangeCirclesGroup !== 'undefined' && dscanRangeCirclesGroup) {
+        dscanRangeCirclesGroup.querySelectorAll("circle.reference-selected").forEach(circ => circ.classList.remove("reference-selected"));
+    }
+    if (typeof updateSelectionCountAndButton === 'function') updateSelectionCountAndButton(); 
+  }
 
-    if (cancelCustomMarkerButton && customMarkerControlsDiv) {
-        cancelCustomMarkerButton.addEventListener("click", () => {
-            isAddingCustomMarkerMode = false;
-            console.log("cancelCustomMarkerButton clicked: isAddingCustomMarkerMode set to false");
-            customMarkerControlsDiv.style.display = "none";
-            if (customMarkerInstructions) customMarkerInstructions.textContent = "Select shape & color, then CLICK ON MAP to place.";
-            if (parseScanButton) parseScanButton.disabled = false;
-            if (trilaterateSelectedButton) trilaterateSelectedButton.disabled = !(selectedReferencePoints && selectedReferencePoints.length === 3);
-            if (parseProbeDataButton) parseProbeDataButton.disabled = false;
-        });
-    } else { console.error("cancelCustomMarkerButton or customMarkerControlsDiv not found/defined for custom markers."); }
+function toggleDScanRangeRings() {
+    console.log("toggleDScanRangeRings Called.");
+    if (!dscanRangeCirclesGroup) {
+        console.error("D-Scan range circles group not found.");
+        // Attempt to create it if it wasn't made during initial render
+        dscanRangeCirclesGroup = document.createElementNS(SVG_NS, "g");
+        dscanRangeCirclesGroup.setAttribute("id", "dscanRangeCirclesGroup");
+        if (svgElement && celestialBodiesGroup) { // Try to insert before celestial bodies
+            svgElement.insertBefore(dscanRangeCirclesGroup, celestialBodiesGroup);
+        } else if (svgElement) { svgElement.appendChild(dscanRangeCirclesGroup); }
+        else { return; } // Cannot proceed
+    }
 
+    if (!knownPointsFromCurrentScan || knownPointsFromCurrentScan.length === 0) {
+        alert("No D-Scan data parsed yet to show range rings. Please parse a D-Scan first.");
+        // Ensure group is hidden if no data
+        dscanRangeCirclesGroup.style.display = 'none';
+        if(toggleDScanRangeRingsButton) toggleDScanRangeRingsButton.textContent = "Show D-Scan Rings";
+        return;
+    }
+
+    if (dscanRangeCirclesGroup.style.display === 'none') {
+        // Circles are hidden or not yet drawn for current scan data. Draw/Re-draw them.
+        drawAllScannedRangeCircles(knownPointsFromCurrentScan); // This function clears then draws
+        dscanRangeCirclesGroup.style.display = ''; // Show the group
+        if(toggleDScanRangeRingsButton) toggleDScanRangeRingsButton.textContent = "Hide D-Scan Rings";
+    } else {
+        // Circles are visible, so hide them
+        dscanRangeCirclesGroup.style.display = 'none';
+        if(toggleDScanRangeRingsButton) toggleDScanRangeRingsButton.textContent = "Show D-Scan Rings";
+    }
+}
+
+  /* --- End of Custom Marker Function --- */
+
+    
   // --- SECTION 3: Event Listener Attachments ---
 
 if(svgElement){
@@ -1815,6 +1991,18 @@ console.log("Global SVG Click: isAddingCustomMarkerMode at this point is:", isAd
       }
     }
     // Add other global SVG click logic here if needed
+
+     if (modalTrilaterateButton && typeof handleModalTrilaterate === 'function') { // Check function exists
+        modalTrilaterateButton.addEventListener('click', handleModalTrilaterate);
+    } else {
+        console.error("modalTrilaterateButton or its handler handleModalTrilaterate not found/defined.");
+    }
+
+    if (modalCancelButton && typeof handleModalCancel === 'function') { // Check function exists
+        modalCancelButton.addEventListener('click', handleModalCancel);
+    } else {
+        console.error("modalCancelButton or its handler handleModalCancel not found/defined.");
+    }
   });
 
 }
@@ -1824,19 +2012,95 @@ console.log("Global SVG Click: isAddingCustomMarkerMode at this point is:", isAd
 
 
 // -------- End of Event Listeners -----
+  console.log("Attaching event listeners...");
+  // System Load
+   if (loadSystemButton) {
+        loadSystemButton.addEventListener("click", () => {
+            const systemIdentifier = systemIdInput ? systemIdInput.value.trim() : null;
+            if (systemIdentifier && typeof fetchAndRenderSystem === 'function') {
+                fetchAndRenderSystem(systemIdentifier);
+            } else if (!systemIdentifier) {
+                alert("Please enter a System Name or ID.");
+            } else {
+                console.error("fetchAndRenderSystem is not defined.");
+            }
+        });
+    } else { console.error("loadSystemButton not found"); }
 
+  // D-Scan Trilateration Flow
+    if (parseScanButton && typeof handleParseScanAndPrepareSelection === 'function') {
+        parseScanButton.addEventListener('click', handleParseScanAndPrepareSelection);
+    } else { console.error("parseScanButton or its handler not found/defined"); }
+
+    if (trilaterateSelectedButton && typeof handleTrilaterateSelected === 'function') {
+        trilaterateSelectedButton.addEventListener('click', handleTrilaterateSelected);
+    } else { console.error("trilaterateSelectedButton or its handler not found/defined"); }
+
+        // Event Listener Attachments (add for new modal buttons)
+
+    if (modalTrilaterateButton) modalTrilaterateButton.addEventListener('click', handleModalTrilaterate);
+    if (modalCancelButton) modalCancelButton.addEventListener('click', handleModalCancel);
+
+  // Probe Scan Flow
+    if (parseProbeDataButton && typeof handleParseProbeData === 'function') {
+        parseProbeDataButton.addEventListener('click', handleParseProbeData);
+    } else { console.error("parseProbeDataButton or its handler not found/defined"); }
+  
+  // Other Controls
+    if (toggleSignatureZonesButton && typeof toggleSignatureZones === 'function') {
+        toggleSignatureZonesButton.addEventListener('click', toggleSignatureZones);
+    } else { console.error("toggleSignatureZonesButton or its handler not found/defined"); }
+
+    if (clearScanDataButton && typeof handleClearScanText === 'function') {
+        clearScanDataButton.addEventListener('click', handleClearScanText);
+    } else { console.error("clearScanDataButton or its handler not found/defined"); }
+
+    if (clearMarkersButton && typeof handleClearMarkers === 'function') {
+        clearMarkersButton.addEventListener('click', handleClearMarkers);
+    } else { console.error("clearMarkersButton or its handler not found/defined"); }
+
+    // Custom Marker Controls Event Listeners
+    if (prepareCustomMarkerButton && customMarkerControlsDiv && typeof handleBodyMouseMoveSVG !== 'undefined') { // handleBodyMouseMoveSVG was removed, so this condition might change
+        prepareCustomMarkerButton.addEventListener("click", () => {
+            isAddingCustomMarkerMode = true;
+            console.log("prepareCustomMarkerButton clicked: isAddingCustomMarkerMode set to true");
+            customMarkerControlsDiv.style.display = "flex";
+            if (customMarkerInstructions) customMarkerInstructions.textContent = "Select shape & color, then CLICK ON MAP to place. You'll be prompted for a label.";
+            if (parseScanButton) parseScanButton.disabled = true;
+            if (trilaterateSelectedButton) trilaterateSelectedButton.disabled = true;
+            if (parseProbeDataButton) parseProbeDataButton.disabled = true;
+        });
+    } else { console.error("prepareCustomMarkerButton or customMarkerControlsDiv not found/defined for custom markers."); }
+
+    if (cancelCustomMarkerButton && customMarkerControlsDiv) {
+        cancelCustomMarkerButton.addEventListener("click", () => {
+            isAddingCustomMarkerMode = false;
+            console.log("cancelCustomMarkerButton clicked: isAddingCustomMarkerMode set to false");
+            customMarkerControlsDiv.style.display = "none";
+            if (customMarkerInstructions) customMarkerInstructions.textContent = "Select shape & color, then CLICK ON MAP to place.";
+            if (parseScanButton) parseScanButton.disabled = false;
+            if (trilaterateSelectedButton) trilaterateSelectedButton.disabled = !(selectedReferencePoints && selectedReferencePoints.length === 3);
+            if (parseProbeDataButton) parseProbeDataButton.disabled = false;
+        });
+    } else { console.error("cancelCustomMarkerButton or customMarkerControlsDiv not found/defined for custom markers."); }
+
+    // In SECTION 3: Event Listener Attachments
+if (toggleDScanRangeRingsButton && typeof toggleDScanRangeRings === 'function') {
+    toggleDScanRangeRingsButton.addEventListener('click', toggleDScanRangeRings);
+} else {
+    console.error("toggleDScanRangeRingsButton or its handler not found/defined.");
+}
+    
+   console.log("Event listeners attached."); 
 
 
   // --- SECTION 4: Initial Render Call ---
-  if (typeof renderSystemSVG === "function") {
-    const defaultSystemName = "J121116"; // <<< CORRECTED: Pass name as a string
-    fetchAndRenderSystem(defaultSystemName); // Pass the name
-  } else {
-    console.error(
-      "renderSystemSVG function is not defined! Map cannot be drawn."
-    );
-  }
-  console.log("Script End (after DOMContentLoaded).");
+// --- INITIAL RENDER CALL ---
+  const defaultSystemName = "J121116"; 
+  if (typeof fetchAndRenderSystem === 'function') {
+    fetchAndRenderSystem(defaultSystemName);
+  } else { console.error("fetchAndRenderSystem function is not defined!"); }
+  console.log("Script End."); 
 });
 
 // End of DOMContentLoaded listener
