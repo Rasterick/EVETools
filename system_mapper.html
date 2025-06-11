@@ -37,19 +37,20 @@
           <button id="parseScanButton">Parse D-Scan & Select Refs</button>
           <button id="trilaterateSelectedButton" style="display: none">Trilaterate Selected (3)</button>
           <button id="parseProbeDataButton">List Probe Scans</button>
+          <button id="toggleDScanRangeRingsButton">Toggle D-Scan Rings</button>
           <button id="toggleSignatureZonesButton">Toggle Signature Zones</button>
           <button id="clearScanDataButton">Clear Scan Text</button>
           <button id="clearMarkersButton">Clear Markers & Lists</button>
         </div>
       </div>
-      
+       <!-- 
       <div id="dScanRefSelectionArea" class="grid-item">
         <div id="selectableCelestialsContainer" style="display: none;"> 
             <h4>Select 3 Refs: <span id="selectionCount">(0/3)</span></h4>
             <div id="selectableCelestialsList"></div>
         </div>
       </div>
-
+      -->
       <div id="plottedLocationsArea" class="grid-item">
         <h2>Plotted Locations</h2>
         <div id="plottedMarkersTableContainer">
@@ -111,7 +112,19 @@
         </div>
       </div>
     </main>
-    
+    <!-- Add this towards the end of your <body>, before the <script> tag for SolarSystem.js -->
+  <div id="selectRefsModal" class="modal-overlay" style="display: none;">
+      <div class="modal-content">
+          <h4 id="modalTitle">Select 3 Reference Celestials <span id="modalSelectionCount">(0/3)</span></h4>
+          <div id="modalSelectableCelestialsList">
+              {/* List items will be populated here */}
+          </div>
+          <div class="modal-actions">
+              <button id="modalTrilaterateButton" disabled>Trilaterate with Selected</button>
+              <button id="modalCancelButton">Cancel Selection</button>
+          </div>
+      </div>
+  </div>
     <script src="script/SolarSystem.js" defer></script>
   </body>
 </html>
