@@ -164,6 +164,7 @@ body { display: flex; flex-direction: column; height: 100vh; }
     width: 100%; flex-grow: 1; overflow-y: auto; border: 1px solid #101010;
     background-color: #101010; box-sizing: border-box;
     min-height: 100px; 
+    overflow-y: auto;
 }
 /* ... (rest of your table, infoBox, marker, and zone styles) ... */
 /* Table general styles */
@@ -194,9 +195,32 @@ body { display: flex; flex-direction: column; height: 100vh; }
 #infoBox.visible { opacity: 1; }
 
 /* SVG Element Styles */
-.celestial-body-svg { cursor: pointer; transition: r 0.05s ease-in-out; }
-.scanner-marker-cross line { stroke: #FFCC00; stroke-width: 2; } 
-.scanner-marker-label { fill: #FFCC00; font-size: 9px; text-anchor: start; dominant-baseline: middle; cursor: pointer; }
+.celestial-body-svg { 
+    cursor: pointer; 
+    transition: r 0.05s ease-in-out; 
+}
+
+.scanner-marker-cross line { 
+    stroke: #FFCC00; 
+    stroke-width: 2; 
+} 
+.scanner-marker-label { 
+    fill: #FFCC00; 
+    font-size: 9px; 
+    text-anchor: start; 
+    dominant-baseline: middle; 
+    cursor: pointer; 
+}
+
 .signature-zone-circle { fill: rgba(0, 168, 255, 0.01); stroke: rgba(0, 168, 255, 0.05); pointer-events: none; } /* stroke-width set by JS */
 .custom-marker-shape { /* Add if you need common styling for all custom shapes */ }
-.custom-marker-label { font-size: 9px; text-anchor: middle; dominant-baseline: text-before-edge; pointer-events: none; cursor: default; }
+
+.custom-marker-label { 
+    fill: #DDDDDD; /* Light grey for custom marker labels */
+    font-size: 9px; 
+    text-anchor: start; /* If you want it next to the shape */
+    /* or text-anchor: middle; dominant-baseline: hanging; if you want it above */
+    dominant-baseline: middle; 
+    cursor: pointer; 
+    /* pointer-events: auto; /* Ensure it can be clicked */
+}
