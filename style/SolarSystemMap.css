@@ -16,6 +16,7 @@ body { display: flex; flex-direction: column; height: 100vh; }
 }
 /* ------- Header Styles ------- */
 #currentSystemTitleHeader { flex-grow: 1; /* Allows it to take space */ }
+
 #systemDetailsHeader {
     display: flex;
     gap: 15px; /* Space between detail items */
@@ -53,6 +54,7 @@ body { display: flex; flex-direction: column; height: 100vh; }
 #appGridContainer {
     display: grid;
     grid-template-columns: minmax(600px, 2.5fr) minmax(220px, 1fr) minmax(250px, 1fr); 
+    
     grid-template-rows: auto auto 1fr minmax(150px, 25vh); /* Top Input | Buttons | Flexible Middle | Bottom Row */
     grid-template-areas:
         "map        scanInput   rightPanel"
@@ -224,3 +226,120 @@ body { display: flex; flex-direction: column; height: 100vh; }
     cursor: pointer; 
     /* pointer-events: auto; /* Ensure it can be clicked */
 }
+
+/* CSS for D-Scan Range Circles */
+#dscanRangeCirclesGroup circle {
+    fill: rgba(26, 235, 71, 0);  /* Very, very transparent blue fill */
+    stroke: rgba(31, 148, 16, 0.5); /* Very light blue stroke, also very transparent */
+    stroke-width: 0.75;              /* ViewBox units - very thin line */
+    stroke-dasharray: 2, 4;          /* Example: small dashes, larger gaps */
+    pointer-events: none;            /* They should not interfere with mouse interactions */
+    transition: stroke 0.3s ease, stroke-width 0.3s ease, fill 0.3s ease; /* Smooth transition for highlighting */
+}
+
+/* Style for when a reference point AND its circle are "selected" by user for trilateration */
+/* This class is added/removed by JavaScript in displaySelectableCelestials' item click listener */
+#dscanRangeCirclesGroup circle.reference-selected {
+    stroke: #1eff0011; /* Gold */
+    stroke-width: .75; /* Slightly thicker for emphasis */
+    stroke-opacity: 0.7; /* More opaque stroke */
+    fill: rgba(255, 217, 0, 0.075); /* Faint gold fill for selected ones */
+    stroke-dasharray: none; /* Solid line for selected ones */
+}
+
+/* Optional: Style for the selected reference point */
+
+/* --- Modal Styles --- */
+.modal-overlay {
+    position: fixed; /* Cover the whole screen */
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6); /* Semi-transparent background */
+    display: flex; /* Used to center modal-content */
+    justify-content: center;
+    align-items: center;
+    z-index: 1000; /* Ensure it's on top */
+}
+
+.modal-content {
+    background-color: #282d33; /* EVE UI panel color */
+    padding: 20px;
+    border-radius: 5px;
+    border: 1px solid #101010;
+    width: 400px; /* Or your preferred width */
+    max-width: 90%;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    display: flex;
+    flex-direction: column;
+    max-height: 80vh; /* Prevent modal from being too tall */
+}
+
+.modal-content h4 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    color: #00A8FF; /* EVE Blue */
+    text-align: center;
+    font-size: 16px;
+    border-bottom: 1px solid #444;
+    padding-bottom: 10px;
+}
+
+#modalSelectableCelestialsList {
+    max-height: 300px; /* Max height for the list itself */
+    overflow-y: auto;
+    border: 1px solid #101010;
+    background-color: #1a1a1a;
+    padding: 5px;
+    margin-bottom: 15px;
+    flex-grow: 1; /* Allow list to take space if modal content is flex column */
+}
+
+/* Modal Styles */
+
+#modalSelectableCelestialsList div.celestial-item {
+    padding: 5px 8px;
+    margin-bottom: 3px;
+    background-color: #33373a;
+    color: #c8c8c8;
+    cursor: pointer;
+    border-radius: 3px;
+    font-size: 12px;
+}
+#modalSelectableCelestialsList div.celestial-item:hover {
+    background-color: #44484c;
+}
+#modalSelectableCelestialsList div.celestial-item.selected {
+    background-color: #005900; /* Dark green */
+    color: #99FF99;
+    font-weight: bold;
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: flex-end; /* Align buttons to the right */
+    gap: 10px;
+    margin-top: 10px;
+    flex-shrink: 0;
+}
+
+.modal-actions button {
+    padding: 8px 15px;
+    font-size: 13px;
+    border-radius: 3px;
+    cursor: pointer;
+}
+#modalTrilaterateButton {
+    background-color: #005f88; /* EVE Blue Action */
+    color: white;
+    border: 1px solid #003c56;
+}
+#modalTrilaterateButton:hover { background-color: #0077a9; }
+#modalTrilaterateButton:disabled { background-color: #2a2d30; color: #666; cursor: not-allowed; }
+#modalCancelButton {
+    background-color: #4a4d50;
+    color: #ccc;
+    border: 1px solid #101010;
+}
+#modalCancelButton:hover { background-color: #5a5d60; }
