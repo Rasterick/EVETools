@@ -53,7 +53,7 @@ body { display: flex; flex-direction: column; height: 100vh; }
 
 #appGridContainer {
     display: grid;
-    grid-template-columns: minmax(600px, 2.5fr) minmax(220px, 1fr) minmax(250px, 1fr); 
+    grid-template-columns: minmax(600px, 2.5fr) minmax(220px, 1fr) minmax(350px, 1.5fr); 
     
     grid-template-rows: auto auto 1fr minmax(150px, 25vh); /* Top Input | Buttons | Flexible Middle | Bottom Row */
     grid-template-areas:
@@ -343,3 +343,176 @@ body { display: flex; flex-direction: column; height: 100vh; }
     border: 1px solid #101010;
 }
 #modalCancelButton:hover { background-color: #5a5d60; }
+
+
+/* --- D-Scan Threat Analysis --- */
+
+
+#dScanThreatAnalysisArea { 
+    grid-area: rightSidePanel; /* MAKE SURE this matches a name in appGridContainer's grid-template-areas */
+    display: flex;    
+    flex-direction: column; /* Main stacking is vertical */
+    gap: 10px; /* Space between main sections within this panel */
+    /* overflow: hidden; /* Already from .grid-item */
+}
+
+#rightSidePanel .scan-meta-controls-threat { /* Wrapper for Analyse button, Origin, Range, Time */
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 5px;
+    flex-shrink: 0; /* Don't shrink this control bar */
+}
+#rightSidePanel .scan-meta-controls button#analyseThreatButton {
+    padding: 6px 10px; 
+    font-size: 12px; 
+    background-color: #005f88; /* EVE Blue action */
+    color: #fff; 
+    border: 1px solid #003c56; 
+    cursor: pointer; 
+    border-radius: 3px;
+}
+
+#rightSidePanel .scan-meta-controls button#analyseThreatButton:hover {background-color: #0077a9;}
+
+#rightSidePanel .scan-details span {
+    font-size: 10px;
+    color: #aaa;
+}
+#rightSidePanel .scan-details input[type="text"],
+#rightSidePanel .scan-details input[type="number"] {
+    width: 80px; /* Adjust as needed */
+    font-size: 10px;
+    padding: 2px 4px;
+    background-color: #101010;
+    color: #c8c8c8;
+    border: 1px solid #444;
+}
+#rightSidePanel .scan-details button#setDscanOriginButton {
+    font-size: 10px; padding: 2px 5px;
+}
+
+
+#rightSidePanel .recon-ships-input {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 8px;
+    flex-shrink: 0;
+}
+#rightSidePanel .recon-ships-input label {
+    font-size: 10px;
+    color: #aaa;
+    margin-bottom: 2px;
+}
+#rightSidePanel .recon-ships-input textarea {
+    width: calc(100% - 10px); /* Full width minus padding */
+    font-size: 10px;
+    background-color: #101010;
+    color: #c8c8c8;
+    border: 1px solid #444;
+    resize: vertical;
+    min-height: 30px;
+    box-sizing: border-box;
+}
+
+
+#rightSidePanel h4 {
+    font-size: 12px;
+    color: #00A8FF;
+    margin-top: 10px;
+    margin-bottom: 3px;
+    padding-bottom: 2px;
+    border-bottom: 1px solid #333;
+    flex-shrink: 0;
+}
+
+.table-container-threat {
+    flex-grow: 1; /* Allow tables to share space */
+    overflow-y: auto;
+    border: 1px solid #101010;
+    background-color: #0c0c0c; /* Slightly different from main panel bg */
+    margin-bottom: 8px; /* Space between tables */
+    min-height: 60px; /* Ensure table area is visible */
+}
+/* Apply common table styles using IDs or a shared class */
+#shipSummaryTable, #classSummaryTable, #unlistedEntriesTable {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 10px;
+    color: #0de74e; /* Default text color for these tables */
+}
+#shipSummaryTable th, #classSummaryTable th, #unlistedEntriesTable th,
+#shipSummaryTable td, #classSummaryTable td, #unlistedEntriesTable td {
+    border: 1px solid #2a2a2a;
+    padding: 2px 4px;
+    text-align: left;
+    white-space: nowrap;
+}
+#shipSummaryTable th:nth-child(n+2):nth-child(-n+7), /* Columns 2-7 for ship summary */
+#shipSummaryTable td:nth-child(n+2):nth-child(-n+7),
+#unlistedEntriesTable th:nth-child(2), /* Item Name */
+#unlistedEntriesTable td:nth-child(2) {
+    white-space: normal; /* Allow specific columns to wrap */
+}
+
+#shipSummaryTable th, #classSummaryTable th, #unlistedEntriesTable th {
+    background-color: #282828;
+    position: sticky;
+    top: 0;
+    z-index: 1; /* Ensure headers are above scrolling content */
+    color: #888;
+}
+#reconShipCountsContainer {
+    margin-top: 10px;
+    margin-bottom: 15px;
+    padding: 8px;
+    background-color: #1a1a1a; /* Slightly different background */
+    border: 1px solid #333;
+    border-radius: 3px;
+    flex-shrink: 0; /* Prevent this container from shrinking */
+}
+
+#reconShipCountsContainer h4 {
+    margin-top: 0;
+    margin-bottom: 8px;
+    font-size: 11px; /* Smaller header for this section */
+    color: #00A8FF;
+    font-weight: normal;
+    border-bottom: 1px solid #333;
+    padding-bottom: 4px;
+}
+
+.recon-input-group {
+    display: flex;
+    align-items: center;
+    margin-bottom: 4px;
+    gap: 5px;
+}
+
+.recon-input-group label {
+    font-size: 11px;
+    color: #bbb;
+    width: 60px; /* Adjust for alignment */
+    flex-shrink: 0;
+}
+
+.recon-input-group input[type="number"] {
+    width: 70px; /* Small input for counts */
+    padding: 3px 5px;
+    font-size: 11px;
+    background-color: #101010;
+    color: #c8c8c8;
+    border: 1px solid #444;
+    border-radius: 2px;
+    box-sizing: border-box;
+    text-align: left;
+}
+
+
+/* Sensor type specific styling from your dscanscript.css could be added here */
+.sensor-radar { color: #FF8C00; } /* DarkOrange */
+.sensor-ladar { color: #ADD8E6; } /* LightBlue */
+.sensor-magnetometric { color: #90EE90; } /* LightGreen */
+.sensor-gravimetric { color: #FFB6C1; } /* LightPink */
+.sensor-unknown { color: #D3D3D3; } /* LightGray */

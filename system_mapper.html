@@ -62,12 +62,71 @@
       </div>
       
       <div id="rightSidePanel" class="grid-item">
-        <h2>D-Scan Threat Analysis</h2> 
-        <p>(Future Feature)</p>
-        <div id="topRightButtonPanel" style="margin-top: auto;">
-          <button id="futureButton1" disabled>(Future) Save State</button>
-          <button id="anotherFutureButton" disabled>(Future) Load State</button>
+        <h2 id="dScanAnalysisTitle">D-Scan Threat Analysis</h2> 
+         <div class="scan-meta-controls">
+            <button id="analyseThreatButton">Analyse Current D-Scan</button>
+            <div class="scan-details">
+                <span>Origin: <input type="text" id="dscanOriginInput" placeholder="Click map or S-marker" readonly title="Click 'Set Origin' then map/marker"></span>
+                <button id="setDscanOriginButton" title="Set D-Scan Origin from Map/Marker">Set Origin</button>
+                <span>Range (AU): <input type="number" id="dscanRangeInput" value="14.3" step="0.1" min="0.1"></span>
+                
+            </div>
         </div>
+        <div id="reconShipCountsContainer">
+        <h4>Off-Scan Recon Ships (Counts):</h4>
+        <div class="recon-input-group">
+            <label for="curseCountInput">Curse:</label>
+            <input type="number" id="curseCountInput" value="0" min="0" step="1">
+        </div>
+        <div class="recon-input-group">
+            <label for="rookCountInput">Rook:</label>
+            <input type="number" id="rookCountInput" value="0" min="0" step="1">
+        </div>
+        <div class="recon-input-group">
+            <label for="lachesisCountInput">Lachesis:</label>
+            <input type="number" id="lachesisCountInput" value="0" min="0" step="1">
+        </div>
+        <div class="recon-input-group">
+            <label for="huginnCountInput">Huginn:</label>
+            <input type="number" id="huginnCountInput" value="0" min="0" step="1">
+        </div>
+    </div>
+
+        <h4>Class Summary</h4>
+        <div class="table-container-threat scrollable">
+            <table id="classSummaryTable">
+                <thead><tr><th>Ship Class</th><th>Count</th></tr></thead>
+                <tbody id="classSummaryTableBody"></tbody>
+            </table>
+        </div>
+
+        <h4>Ship Summary</h4>
+        <div class="table-container-threat scrollable">
+            <table id="shipSummaryTable">
+                <thead>
+                  <tr>
+                    <th>Count</th>
+                    <th>Ship</th>
+                    <th>Class</th>
+                    <th>Faction</th>
+                    <th>ECM/Sensor</th>
+                    <th>Tank</th>
+                    <th>DPS</th>
+                  </tr>
+                </thead>
+                <tbody id="shipSummaryTableBody"></tbody>
+            </table>
+        </div>
+
+        <h4>Unlisted Entries (from D-Scan)</h4>
+        <div class="table-container-threat scrollable">
+            <table id="unlistedEntriesTable">
+                <thead><tr><th>Count</th><th>Item Name</th></tr></thead>
+                <tbody id="unlistedEntriesTableBody"></tbody>
+            </table>
+        </div>
+        <div id="malformedLinesInfoThreat" style="font-size:10px; color:#aaa; margin-top:5px;"></div>
+        
       </div>
 
       <div id="probeScanResultsArea" class="grid-item">
