@@ -1,6 +1,7 @@
 /* SolarSystemMap.css */
 html, body {
     height: 100%; margin: 0; font-family: sans-serif;
+    background-image: url('../images/Background.jpg') ; 
     background-color: #181a1b; 
     color: #c8c8c8; 
     overflow: hidden; 
@@ -86,14 +87,31 @@ body { display: flex; flex-direction: column; height: 100vh; }
 #scanInputArea { grid-area: scanInput; } 
 #buttonPanelArea { grid-area: buttons; background-color: transparent; border: none; padding: 0; } 
 #dScanRefSelectionArea { /* This element will now live inside another grid item */ }
+
 #plottedLocationsArea { grid-area: plotTable; } 
-#rightSidePanel { grid-area: rightPanel; justify-content: space-between; } 
+
+#rightSidePanel { 
+    grid-area: rightPanel; 
+    display: flex;
+    justify-content: space-between; 
+    gap: 8px;
+} 
 #probeScanResultsArea { grid-area: probeTable; } 
 #lootEstimationArea { grid-area: lootArea; } 
 #systemInfoArea { grid-area: sysInfoArea; } 
 
 
-#svgContainer { width: 100%; height: 100%; background-color: #02020A; flex-grow:1; position:relative;}
+#svgContainer { 
+    width: 100%; 
+    height: 100%; 
+    background-color: #02020A; 
+    flex-grow:1; position:relative;
+    /* ----
+    transform-origin: center;  //rotate
+    transform: rotate(180deg); // -- rotate
+    */
+}
+
 #solarSystemSVG { width: 100%; height: 100%; display: block; }
 
 #scanInputArea textarea#scanDataInput { 
@@ -251,29 +269,35 @@ body { display: flex; flex-direction: column; height: 100vh; }
 
 /* --- Modal Styles --- */
 .modal-overlay {
-    position: fixed; /* Cover the whole screen */
+    position: fixed; 
     top: 0;
-    left: 0;
+    left: 0; /* Keep full screen overlay for background dimming */
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.6); /* Semi-transparent background */
-    display: flex; /* Used to center modal-content */
-    justify-content: center;
-    align-items: center;
-    z-index: 1000; /* Ensure it's on top */
+    background-color: rgba(0, 0, 0, 0.6); 
+    display: flex; 
+    /* Change these to position content within the overlay */
+    justify-content: flex-end;  /* Push content to the right */
+    align-items: flex-start;    /* Push content to the top */
+    z-index: 1000; 
+    padding-top: 460px; /* Space from top of viewport (below your header) */
+    padding-right: 500px; /* Space from right of viewport */
+    box-sizing: border-box; /* Include padding in dimensions */
+    pointer-events: auto; /* Overlay itself needs to be clickable to potentially close modal */
 }
 
 .modal-content {
-    background-color: #282d33; /* EVE UI panel color */
-    padding: 20px;
+    background-color: #282d33; 
+    padding: 15px; /* Slightly smaller padding */
     border-radius: 5px;
     border: 1px solid #101010;
-    width: 400px; /* Or your preferred width */
-    max-width: 90%;
+    width: 300px; /* Adjust width as needed for side panel */
+    max-width: 30%; /* Max relative width */
     box-shadow: 0 5px 15px rgba(0,0,0,0.3);
     display: flex;
     flex-direction: column;
-    max-height: 80vh; /* Prevent modal from being too tall */
+    max-height: calc(100vh - 80px); /* Max height considering padding */
+    /* pointer-events: auto; /* Content inside needs pointer events */
 }
 
 .modal-content h4 {
@@ -416,7 +440,6 @@ body { display: flex; flex-direction: column; height: 100vh; }
     box-sizing: border-box;
 }
 
-
 #rightSidePanel h4 {
     font-size: 12px;
     color: #00A8FF;
@@ -425,6 +448,44 @@ body { display: flex; flex-direction: column; height: 100vh; }
     padding-bottom: 2px;
     border-bottom: 1px solid #333;
     flex-shrink: 0;
+}
+
+/* Main Ship Summary Area */
+#rightSidePanel #shipSummaryContainer {
+    /* This is a .table-container-threat, so it already has flex-grow:1, overflow:auto */
+    /* We want this to be the primary, taller table */
+    flex-grow: 2; /* Give it more flexible space compared to secondary tables if parent is flex */
+    min-height: 150px; /* Ensure it has decent height */
+    /* The h4 is already styled by .grid-item h2 (if you change it) or needs its own */
+}
+#rightSidePanel #shipSummaryContainer h4 { /* If it has an h4 directly */
+    font-size: 13px; color: #00A8FF; margin-bottom: 5px; flex-shrink: 0; 
+    background-color: #282828; padding: 3px; text-align: center;
+}
+
+/* Container for the two smaller side-by-side tables */
+#secondaryThreatTablesWrapper  {
+    display: flex;
+    flex-direction: row; /* Arrange Class Summary and Unlisted side-by-side */
+    gap: 8px;
+    flex-grow: 1; /* Takes up some flexible space */
+    min-height: 120px; /* Ensure it has height */
+    flex-shrink: 0; /* Can also be useful */
+}
+/* Individual areas for the smaller tables */
+#classSummaryWrapper,
+#unlistedEntriesSideArea {
+    flex-basis: 50%; /* Each takes half of the container's width */
+    display: flex; /* To make h4 and table stack and table scroll */
+    flex-direction: column;
+    overflow: hidden; /* Parent controls overflow */
+    /* These inherit .table-container-threat styles if they have the class,
+       which provides background, border, and makes the inner table scrollable */
+}
+#classSummarySideArea h4,
+#unlistedEntriesSideArea h4 { /* If they have direct h4 children */
+    font-size: 12px; color: #00A8FF; margin-bottom: 5px; flex-shrink: 0;
+    background-color: #282828; padding: 3px; text-align: center;
 }
 
 .table-container-threat {
@@ -448,6 +509,20 @@ body { display: flex; flex-direction: column; height: 100vh; }
     padding: 2px 4px;
     text-align: left;
     white-space: nowrap;
+}
+
+#shipSummaryTable td a {
+    color: #66aaff; /* A lighter, more readable blue - EVE often uses these cyans/light blues */
+    text-decoration: none; /* Optional: Remove underline if you prefer */
+}
+
+#shipSummaryTable td a:hover {
+    color: #88ccff; /* Slightly brighter blue on hover */
+    text-decoration: underline; /* Optional: Add underline on hover for clarity */
+}
+
+#shipSummaryTable td a:visited { /* Optional: Style for visited links if needed */
+    color: #7799dd; /* Slightly different shade for visited, can be same as normal */
 }
 #shipSummaryTable th:nth-child(n+2):nth-child(-n+7), /* Columns 2-7 for ship summary */
 #shipSummaryTable td:nth-child(n+2):nth-child(-n+7),
@@ -510,9 +585,68 @@ body { display: flex; flex-direction: column; height: 100vh; }
 }
 
 
-/* Sensor type specific styling from your dscanscript.css could be added here */
-.sensor-radar { color: #FF8C00; } /* DarkOrange */
-.sensor-ladar { color: #ADD8E6; } /* LightBlue */
-.sensor-magnetometric { color: #90EE90; } /* LightGreen */
-.sensor-gravimetric { color: #FFB6C1; } /* LightPink */
-.sensor-unknown { color: #D3D3D3; } /* LightGray */
+/* Sensor Background Colors for Ship Summary Table */
+#shipSummaryTable td.sensor-radar { background-color: #FAFAD2; /* LightGoldenrodYellow - better contrast than Pale Yellow on light text */ color: #333; }
+#shipSummaryTable td.sensor-gravimetric { background-color: #B0E0E6; /* PowderBlue */ color: #333; }
+#shipSummaryTable td.sensor-magnetometric { background-color: #98FB98; /* PaleGreen */ color: #333; }
+#shipSummaryTable td.sensor-ladar { background-color: #FFC0CB; /* Pink - was LightPink */ color: #333; }
+#shipSummaryTable td.sensor-multisensor { background-color: #D8BFD8; /* Thistle - for SoCT/CONCORD */ color: #333; }
+#shipSummaryTable td.sensor-unknown { background-color: inherit; /* Uses default cell background */ } 
+                                     /* color will inherit from table default */
+
+/* Ensure default table cell text color provides contrast if background isn't set */
+#shipSummaryTable td {
+    /* color: #00BFFF; /* Your default table text color */
+}
+
+/* --- Manual Ranges of Celestials ---- */
+#manualRangeCelestialsList .celestial-range-entry {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 4px 0;
+    margin-bottom: 2px;
+    border-bottom: 1px solid #2a2a2a;
+    font-size: 12px;
+}
+#manualRangeCelestialsList .celestial-range-entry:last-child {
+    border-bottom: none;
+}
+#manualRangeCelestialsList .celestial-range-entry label {
+    color: #c8c8c8;
+    flex-basis: 60%; /* Give more space to name */
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+#manualRangeCelestialsList .celestial-range-entry input[type="text"] {
+    width: 70px; /* For range */
+    padding: 3px;
+    font-size: 11px;
+    background-color: #101010;
+    color: #c8c8c8;
+    border: 1px solid #444;
+    border-radius: 2px;
+    text-align: right;
+}
+#manualRangeCelestialsList .celestial-range-entry select { /* For unit selection */
+    width: 55px;
+    padding: 3px;
+    font-size: 11px;
+    background-color: #101010;
+    color: #c8c8c8;
+    border: 1px solid #444;
+    border-radius: 2px;
+    margin-left: 5px;
+}
+
+.dscan-range-visualization-circle {
+    fill: rgba(255, 165, 0, 0.05); /* Faint orange fill */
+    stroke: rgba(200, 200, 200, 0.5);  /* Faint orange stroke */
+    stroke-width: 0.5; /* ViewBox units */
+    stroke-dasharray: 4, 4;
+}
+.dscan-area-handle line { /* If the handle is a cross */
+    /* stroke is set by selected color in JS */
+    /* stroke-width is set by selected color in JS */
+}
