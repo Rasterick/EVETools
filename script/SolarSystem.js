@@ -92,7 +92,17 @@ document.addEventListener("DOMContentLoaded", () => {
   const lachesisCountInput = document.getElementById("lachesisCountInput");
   const huginnCountInput = document.getElementById("huginnCountInput");
 
-  const celestialKeywords = ["Planet", "Moon", "Sun", "Star", "Asteroid Belt", "Stargate", "Station", "Customs Office", "Beacon"];
+  const celestialKeywords = [
+    "Planet",
+    "Moon",
+    "Sun",
+    "Star",
+    "Asteroid Belt",
+    "Stargate",
+    "Station",
+    "Customs Office",
+    "Beacon",
+  ];
 
   /* --- Manual celestial Range Entry --- */
   const manualRangeEntryButton = document.getElementById(
@@ -108,6 +118,11 @@ document.addEventListener("DOMContentLoaded", () => {
   const cancelManualRangeButton = document.getElementById(
     "cancelManualRangeButton"
   );
+
+  /* --- D-Scan Orin Functionality --- */
+  const setDscanOriginButton = document.getElementById("setDscanOriginButton");
+  const dscanOriginInput = document.getElementById("dscanOriginInput"); // For displaying the origin label
+  const dscanRangeInput = document.getElementById("dscanRangeInput"); // For D-Scan range in AU
 
   let baseOrbitsGroup,
     signatureZonesGroup,
@@ -126,7 +141,12 @@ document.addEventListener("DOMContentLoaded", () => {
   let parsedProbeSignatures = [];
   let isLinkingProbeSignature = false;
   let signatureToLink = null;
+
+  /* --  D-Scan Marker -- */
+
   let isAddingCustomMarkerMode = false;
+  let isSettingDScanOrigin = false;
+  let currentActiveDScanOriginMarkerId = null;
 
   console.log("Script Start: DOM loaded, constants and DOM elements defined.");
   if (!probeScanTableBody)
@@ -1598,124 +1618,140 @@ document.addEventListener("DOMContentLoaded", () => {
     console.log("Linking mode for sig:", signature);
   }
 
-function createAndPlotCustomMarker(id, labelText, shapeType, color, svgX, svgY) {
-    console.log(`Creating Custom Marker: ID=${id}, Label=${labelText}, Shape=${shapeType}, Color=${color}, svgX=${svgX.toFixed(1)}, svgY=${svgY.toFixed(1)}`);
+  function createAndPlotCustomMarker(
+    id,
+    labelText,
+    shapeType,
+    color,
+    svgX,
+    svgY
+) {
+    console.log(`Plotting Custom Marker: ID=${id}, Shape=${shapeType}, Color=${color}`);
 
     if (!scanMarkersGroup) { 
-        console.error("CRITICAL createAndPlotCustomMarker: scanMarkersGroup is not initialized!");
-        return;
+        console.error("CRITICAL createAndPlotCustomMarker: scanMarkersGroup is not initialized!"); return;
     }
-    if (typeof currentSystemScaleFactor !== 'number' || currentSystemScaleFactor === 0 || isNaN(currentSystemScaleFactor)) {
-         console.warn("CRITICAL createAndPlotCustomMarker: currentSystemScaleFactor is invalid. KM coords in table may be off.");
-         // Proceeding with SVG placement, but km data will be unreliable.
-    }
+    // ... (other initial checks if needed) ...
 
     const markerGroup = document.createElementNS(SVG_NS, "g");
     markerGroup.setAttribute("id", id);
-    markerGroup.setAttribute('transform', `translate(${svgX}, ${svgY})`);
-    
-    let shapeElementToDrag; // This will be the element that receives the drag listener
-    const baseSize = 6; 
-    const strokeWidthCustom = 1.5; // Stroke width for line-based custom markers
+    markerGroup.setAttribute("transform", `translate(${svgX}, ${svgY})`);
 
-    switch (shapeType) {
-        case "dscan_area":
-            const dscanHandle = document.createElementNS(SVG_NS, "g");
-            dscanHandle.classList.add("custom-marker-shape"); // For common drag handle styling if any
-            // dscanHandle.style.cursor = 'move'; // makeMarkerDraggable does this
+    let shapeElementToDrag; // This will be the main visual/draggable part
+    const baseSize = 6;
+    const strokeWidthCustom = 1.5;
 
-            const dscanL1 = document.createElementNS(SVG_NS, "line");
-            dscanL1.setAttribute("x1", (-baseSize).toString()); dscanL1.setAttribute("y1", "0");
-            dscanL1.setAttribute("x2", baseSize.toString());  dscanL1.setAttribute("y2", "0");
-            dscanL1.setAttribute("stroke", color); dscanL1.setAttribute("stroke-width", strokeWidthCustom.toString());
-            const dscanL2 = document.createElementNS(SVG_NS, "line");
-            dscanL2.setAttribute("x1", "0"); dscanL2.setAttribute("y1", (-baseSize).toString());
-            dscanL2.setAttribute("x2", "0"); dscanL2.setAttribute("y2", baseSize.toString());
-            dscanL2.setAttribute("stroke", color); dscanL2.setAttribute("stroke-width", strokeWidthCustom.toString());
-            dscanHandle.appendChild(dscanL1); dscanHandle.appendChild(dscanL2);
-            shapeElementToDrag = dscanHandle; // The cross is the draggable part
-
+    if (shapeType === "dscan_area" || shapeType === "dscan_area_fixed") {
+        // --- HANDLE D-SCAN AREA MARKER TYPES ---
+        let rangeAU;
+        if (shapeType === "dscan_area_fixed") {
+            rangeAU = 14.3;
+        } else { // "dscan_area_input"
             const dscanRangeInputEl = document.getElementById('dscanRangeInput');
-            const dscanRangeAU = parseFloat(dscanRangeInputEl?.value) || 14.3; 
-            const dscanRadiusKmVal = dscanRangeAU * AU_KM; 
-            let dscanRadiusSVGVal = 0; 
-            if (currentSystemScaleFactor) { // Check if scale factor is valid
-                dscanRadiusSVGVal = dscanRadiusKmVal * currentSystemScaleFactor; 
+            rangeAU = parseFloat(dscanRangeInputEl?.value) || 14.3;
+        }
+        
+        const radiusKm = rangeAU * AU_KM;
+        let radiusSVG = currentSystemScaleFactor ? (radiusKm * currentSystemScaleFactor) : 0;
+        
+        const rangeCircle = document.createElementNS(SVG_NS, "circle");
+        rangeCircle.setAttribute("cx", "0"); rangeCircle.setAttribute("cy", "0");
+        rangeCircle.setAttribute("r", radiusSVG.toString());
+        rangeCircle.setAttribute("class", "dscan-range-visualization-circle");
+        rangeCircle.style.pointerEvents = "none";
+        markerGroup.appendChild(rangeCircle); // Add range circle to the main group first
+
+        // Define the draggable handle (a cross) for D-Scan area types
+        shapeElementToDrag = document.createElementNS(SVG_NS, "g");
+        // shapeElementToDrag.classList.add("dscan-area-handle"); // Optional class for specific handle styling
+
+        const dL1 = document.createElementNS(SVG_NS, "line");
+        dL1.setAttribute("x1", (-baseSize).toString()); dL1.setAttribute("y1", "0");
+        dL1.setAttribute("x2", baseSize.toString());    dL1.setAttribute("y2", "0");
+        dL1.setAttribute("stroke", color); dL1.setAttribute("stroke-width", strokeWidthCustom.toString());
+        shapeElementToDrag.appendChild(dL1);
+
+        const dL2 = document.createElementNS(SVG_NS, "line");
+        dL2.setAttribute("x1", "0"); dL2.setAttribute("y1", (-baseSize).toString());
+        dL2.setAttribute("x2", "0"); dL2.setAttribute("y2", baseSize.toString());
+        dL2.setAttribute("stroke", color); dL2.setAttribute("stroke-width", strokeWidthCustom.toString());
+        shapeElementToDrag.appendChild(dL2);
+        // The 'shapeElementToDrag' (handle) will be appended to markerGroup after this if/else block
+        
+    } else {
+        // --- HANDLE ALL OTHER STANDARD SHAPE TYPES ---
+        switch (shapeType) {
+            case "cross": {
+                shapeElementToDrag = document.createElementNS(SVG_NS, "g");
+                const crossL1 = document.createElementNS(SVG_NS, "line");
+                crossL1.setAttribute("x1", (-baseSize).toString()); crossL1.setAttribute("y1", "0");
+                crossL1.setAttribute("x2", baseSize.toString());    crossL1.setAttribute("y2", "0");
+                crossL1.setAttribute("stroke", color); crossL1.setAttribute("stroke-width", strokeWidthCustom.toString());
+                shapeElementToDrag.appendChild(crossL1);
+                const crossL2 = document.createElementNS(SVG_NS, "line");
+                crossL2.setAttribute("x1", "0"); crossL2.setAttribute("y1", (-baseSize).toString());
+                crossL2.setAttribute("x2", "0"); crossL2.setAttribute("y2", baseSize.toString());
+                crossL2.setAttribute("stroke", color); crossL2.setAttribute("stroke-width", strokeWidthCustom.toString());
+                shapeElementToDrag.appendChild(crossL2);
+                break;
             }
-            const rangeCircle = document.createElementNS(SVG_NS, "circle"); 
-            rangeCircle.setAttribute("cx", "0"); rangeCircle.setAttribute("cy", "0");
-            rangeCircle.setAttribute("r", dscanRadiusSVGVal.toString());
-            rangeCircle.setAttribute("class", "dscan-range-visualization-circle"); 
-            rangeCircle.style.pointerEvents = "none"; 
-            markerGroup.appendChild(rangeCircle); // Add range circle first (underneath handle)
-            markerGroup.appendChild(shapeElementToDrag); // Add handle on top
-            break; 
+            case "square": {
+                shapeElementToDrag = document.createElementNS(SVG_NS, "rect");
+                shapeElementToDrag.setAttribute("x", (-baseSize / 2).toString());
+                shapeElementToDrag.setAttribute("y", (-baseSize / 2).toString());
+                shapeElementToDrag.setAttribute("width", baseSize.toString());
+                shapeElementToDrag.setAttribute("height", baseSize.toString());
+                shapeElementToDrag.setAttribute("fill", color);
+                break;
+            }
+            case "diamond": {
+                shapeElementToDrag = document.createElementNS(SVG_NS, "polygon");
+                shapeElementToDrag.setAttribute("points", `0,${-baseSize} ${baseSize},0 0,${baseSize} ${-baseSize},0`);
+                shapeElementToDrag.setAttribute("fill", color);
+                break;
+            }
+            case "triangle_up": {
+                shapeElementToDrag = document.createElementNS(SVG_NS, "polygon");
+                const triH = baseSize * (Math.sqrt(3)/2); 
+                shapeElementToDrag.setAttribute("points", `0,${-triH*0.66} ${baseSize*0.5},${triH*0.33} ${-baseSize*0.5},${triH*0.33}`);
+                shapeElementToDrag.setAttribute("fill", color);
+                break;
+            }
+            case "circle": // Fallthrough for default
+            default: {
+                shapeElementToDrag = document.createElementNS(SVG_NS, "circle");
+                shapeElementToDrag.setAttribute("cx", "0");
+                shapeElementToDrag.setAttribute("cy", "0");
+                shapeElementToDrag.setAttribute("r", (baseSize / 1.8).toString()); 
+                shapeElementToDrag.setAttribute("fill", color);
+                break;
+            }
+        } // End of switch for non-D-Scan shapes
+    } // End of else for non-D-Scan shapes
 
-        case "cross":
-            shapeElementToDrag = document.createElementNS(SVG_NS, "g");
-            shapeElementToDrag.classList.add("custom-marker-shape");
-            const crossL1 = document.createElementNS(SVG_NS, "line");
-            crossL1.setAttribute("x1", (-baseSize).toString()); crossL1.setAttribute("y1", "0");
-            crossL1.setAttribute("x2", baseSize.toString());  crossL1.setAttribute("y2", "0");
-            crossL1.setAttribute("stroke", color); crossL1.setAttribute("stroke-width", strokeWidthCustom.toString());
-            const crossL2 = document.createElementNS(SVG_NS, "line");
-            crossL2.setAttribute("x1", "0"); crossL2.setAttribute("y1", (-baseSize).toString());
-            crossL2.setAttribute("x2", "0"); crossL2.setAttribute("y2", baseSize.toString());
-            crossL2.setAttribute("stroke", color); crossL2.setAttribute("stroke-width", strokeWidthCustom.toString());
-            shapeElementToDrag.appendChild(crossL1); shapeElementToDrag.appendChild(crossL2);
-            markerGroup.appendChild(shapeElementToDrag);
-            break;
-        case "square":
-            shapeElementToDrag = document.createElementNS(SVG_NS, "rect");
-            shapeElementToDrag.setAttribute("x", (-baseSize / 2).toString());
-            shapeElementToDrag.setAttribute("y", (-baseSize / 2).toString());
-            shapeElementToDrag.setAttribute("width", baseSize.toString());
-            shapeElementToDrag.setAttribute("height", baseSize.toString());
-            shapeElementToDrag.setAttribute("fill", color);
-            shapeElementToDrag.classList.add("custom-marker-shape");
-            markerGroup.appendChild(shapeElementToDrag);
-            break;
-        case "diamond":
-            shapeElementToDrag = document.createElementNS(SVG_NS, "polygon");
-            shapeElementToDrag.setAttribute("points", `0,${-baseSize * 0.8} ${baseSize * 0.8},0 0,${baseSize * 0.8} ${-baseSize * 0.8},0`); // Smaller diamond
-            shapeElementToDrag.setAttribute("fill", color);
-            shapeElementToDrag.classList.add("custom-marker-shape");
-            markerGroup.appendChild(shapeElementToDrag);
-            break;
-        case "triangle_up":
-            shapeElementToDrag = document.createElementNS(SVG_NS, "polygon");
-            // Points for equilateral triangle pointing up, centered at 0,0
-            const triH = baseSize * (Math.sqrt(3)/2); // Height of equilateral triangle
-            shapeElementToDrag.setAttribute("points", `0,${-triH*2/3} ${baseSize/2},${triH/3} ${-baseSize/2},${triH/3}`);
-            shapeElementToDrag.setAttribute("fill", color);
-            shapeElementToDrag.classList.add("custom-marker-shape");
-            markerGroup.appendChild(shapeElementToDrag);
-            break;
-        case "circle":
-        default:
-            shapeElementToDrag = document.createElementNS(SVG_NS, "circle");
-            shapeElementToDrag.setAttribute("cx", "0");
-            shapeElementToDrag.setAttribute("cy", "0");
-            shapeElementToDrag.setAttribute("r", (baseSize / 1.8).toString()); // Adjusted size for circle
-            shapeElementToDrag.setAttribute("fill", color);
-            shapeElementToDrag.classList.add("custom-marker-shape");
-            markerGroup.appendChild(shapeElementToDrag);
-            break;
-    }
-
+    // Common logic after shapeElementToDrag is defined by either if or else block
     if (!shapeElementToDrag) {
-        console.error("Failed to create shapeElementToDrag for type:", shapeType);
+        console.error(`CRITICAL: shapeElementToDrag is still undefined after processing shapeType: "${shapeType}". This should not happen.`);
         return; 
     }
 
+    shapeElementToDrag.classList.add("custom-marker-shape"); 
+    markerGroup.appendChild(shapeElementToDrag); // Add the primary shape/handle to the group
+
+    // Add Label
     const label = document.createElementNS(SVG_NS, "text");
-    label.setAttribute("x", (baseSize + 3).toString()); // Position label to the right
-    label.setAttribute("y", "0");    // Vertically centered
+    label.setAttribute("x", (baseSize + 3).toString()); 
+    label.setAttribute("y", "0");    
     label.classList.add("custom-marker-label"); 
     label.textContent = labelText;
-    label.style.fill = "#E0E0E0"; // Good contrasting light grey/white
+    label.style.fill = "#E0E0E0"; 
     label.style.cursor = "pointer";
-    label.addEventListener('click', (e) => handleMarkerLabelClick(e, id, labelText));
+    label.addEventListener('click', (e) => handleMarkerLabelClick(e, id, labelText)); 
+    // Counter-rotation for label if main SVG is rotated (assuming mapRotationAngle = 180 or 0)
+    // const mapRotationAngle = 0; // Set to 180 if your SVG is rotated by CSS
+    // if (mapRotationAngle === 180) {
+    //    label.setAttribute("transform", `rotate(180, ${baseSize + 3}, 0)`);
+    // }
     markerGroup.appendChild(label);
 
     scanMarkersGroup.appendChild(markerGroup);
@@ -1725,8 +1761,8 @@ function createAndPlotCustomMarker(id, labelText, shapeType, color, svgX, svgY) 
     } else {
         console.error("makeMarkerDraggable function is not defined!");
     }
+    console.log(`Custom marker "${labelText}" (ID: ${id}) type "${shapeType}" added to map.`);
 }
-
 
   // --- NEW Reusable Function for Label Interaction ---
   function handleMarkerLabelClick(
@@ -2266,14 +2302,19 @@ function createAndPlotCustomMarker(id, labelText, shapeType, color, svgX, svgY) 
 
   // SolarSystem.js - SECTION 2
 
- function parseDScanLineForEntities(lineText) {
-    const parts = lineText.split('\t');
+  function parseDScanLineForEntities(lineText) {
+    const parts = lineText.split("\t");
     if (parts.length < 2) return null; // Need at least ID and Col2 (which might be ship name if distance is very short in col3)
 
     const idStr = parts[0].trim();
-    let col2 = parts[1].trim(); 
-    let col3 = parts.length > 2 ? parts[2].trim() : null; 
-    let distanceStr = parts.length > 3 ? parts[3].trim() : (parts.length === 3 && (parseDistanceToKm(col3, true) !== null) ? col3 : null); // Check if col3 is distance
+    let col2 = parts[1].trim();
+    let col3 = parts.length > 2 ? parts[2].trim() : null;
+    let distanceStr =
+      parts.length > 3
+        ? parts[3].trim()
+        : parts.length === 3 && parseDistanceToKm(col3, true) !== null
+        ? col3
+        : null; // Check if col3 is distance
 
     let potentialShipName;
     let potentialPilotName = null; // Default to no pilot name
@@ -2285,112 +2326,140 @@ function createAndPlotCustomMarker(id, labelText, shapeType, color, svgX, svgY) 
     // 4. ID --- Pilot/Corp --- Ship Type --- "-" (On grid player ships)
     // 5. ID --- Name/Type --- --- "-" (On grid NPCs/structures)
 
-    if (distanceStr !== null) { // Distance is in the expected 4th column (or 3rd if only 3 columns)
-        potentialShipName = col3 !== "-" && col3 !== null ? col3 : col2; // If col3 is "-", use col2 as name
-        if (col2 !== potentialShipName && col2 !== "-") {
-            potentialPilotName = col2;
-        }
-    } else if (col3 !== null && (parseDistanceToKm(col3, true) !== null || col3 === "-")) { // col3 is distance or "-"
-        distanceStr = col3;
-        potentialShipName = col2;
-    } else if (col3 !== null) { // col3 is likely ship name, col2 is pilot/corp
-        potentialShipName = col3;
-        if (col2 !== "-") potentialPilotName = col2;
-        distanceStr = "-"; // Assume on grid if no explicit distance
-    } else { // Only col2 exists after ID, assume it's the item name
-        potentialShipName = col2;
-        distanceStr = "-"; // Assume on grid
-    }
-    
-    // If potentialShipName is still one of the generic group names from probe scan, try to use previous column
-    // This part might need more specific examples from your actual D-Scan if issues persist
-    const genericGroups = ["cosmic signature", "cosmic anomaly", "combat site", "relic site", "data site", "wormhole", "gas site"];
-    if (genericGroups.includes(potentialShipName.toLowerCase()) && potentialPilotName && !genericGroups.includes(potentialPilotName.toLowerCase())) {
-        // If col3 was "Cosmic Signature" and col2 was "Unstable Wormhole", use col2.
-        // This is trying to get the more specific name if col3 was too generic.
-        // This heuristic is complex because D-Scan output isn't perfectly consistent for all item types.
-        // For now, let's prioritize col3 as potentialShipName if distance is in col4.
-        // If col3 is a distance or "-", then col2 is the shipName.
+    if (distanceStr !== null) {
+      // Distance is in the expected 4th column (or 3rd if only 3 columns)
+      potentialShipName = col3 !== "-" && col3 !== null ? col3 : col2; // If col3 is "-", use col2 as name
+      if (col2 !== potentialShipName && col2 !== "-") {
+        potentialPilotName = col2;
+      }
+    } else if (
+      col3 !== null &&
+      (parseDistanceToKm(col3, true) !== null || col3 === "-")
+    ) {
+      // col3 is distance or "-"
+      distanceStr = col3;
+      potentialShipName = col2;
+    } else if (col3 !== null) {
+      // col3 is likely ship name, col2 is pilot/corp
+      potentialShipName = col3;
+      if (col2 !== "-") potentialPilotName = col2;
+      distanceStr = "-"; // Assume on grid if no explicit distance
+    } else {
+      // Only col2 exists after ID, assume it's the item name
+      potentialShipName = col2;
+      distanceStr = "-"; // Assume on grid
     }
 
+    // If potentialShipName is still one of the generic group names from probe scan, try to use previous column
+    // This part might need more specific examples from your actual D-Scan if issues persist
+    const genericGroups = [
+      "cosmic signature",
+      "cosmic anomaly",
+      "combat site",
+      "relic site",
+      "data site",
+      "wormhole",
+      "gas site",
+    ];
+    if (
+      genericGroups.includes(potentialShipName.toLowerCase()) &&
+      potentialPilotName &&
+      !genericGroups.includes(potentialPilotName.toLowerCase())
+    ) {
+      // If col3 was "Cosmic Signature" and col2 was "Unstable Wormhole", use col2.
+      // This is trying to get the more specific name if col3 was too generic.
+      // This heuristic is complex because D-Scan output isn't perfectly consistent for all item types.
+      // For now, let's prioritize col3 as potentialShipName if distance is in col4.
+      // If col3 is a distance or "-", then col2 is the shipName.
+    }
 
     let distanceKm;
     let isDistanceValid = false;
     if (distanceStr === "-") {
-        distanceKm = 0; // Represent "-" as 0 km (on grid) or a special marker
-        isDistanceValid = true; // It's a valid "on grid" distance
+      distanceKm = 0; // Represent "-" as 0 km (on grid) or a special marker
+      isDistanceValid = true; // It's a valid "on grid" distance
     } else {
-        distanceKm = parseDistanceToKm(distanceStr); // Uses your existing helper
-        if (!isNaN(distanceKm)) {
-            isDistanceValid = true;
-        }
+      distanceKm = parseDistanceToKm(distanceStr); // Uses your existing helper
+      if (!isNaN(distanceKm)) {
+        isDistanceValid = true;
+      }
     }
 
-    if (!isDistanceValid && parts.length < 3) { // If it's truly malformed and no distance clearly identifiable
-         // console.warn(`parseDScanLineForEntities: Not enough parts or unparseable distance for line: "${lineText}"`);
-        return null;
+    if (!isDistanceValid && parts.length < 3) {
+      // If it's truly malformed and no distance clearly identifiable
+      // console.warn(`parseDScanLineForEntities: Not enough parts or unparseable distance for line: "${lineText}"`);
+      return null;
     }
     // If distance is still NaN but we have a potential ship name, we can proceed for threat analysis
     // but range-based features (like trilateration circles) won't work well for this item.
     // For threat analysis, we mainly need the ship type.
     if (potentialShipName) {
-        const lowerPotentialShipName = potentialShipName.toLowerCase();
-        // Check against specific keywords common for celestials in D-Scan
-        if (lowerPotentialShipName.includes("planet") || 
-            lowerPotentialShipName.includes("moon") ||
-            lowerPotentialShipName.includes("sun") || // Could be "J121116 Sun"
-            lowerPotentialShipName.includes("star (") || // E.g. "Star (K0V type)"
-
-            celestialKeywords.some(keyword => lowerPotentialShipName.includes(keyword.toLowerCase()))) { // Add more if needed
-            // console.log("Skipping celestial for threat analysis:", potentialShipName);
-            return null; // Skip planets, moons, and stars
-        }
+      const lowerPotentialShipName = potentialShipName.toLowerCase();
+      // Check against specific keywords common for celestials in D-Scan
+      if (
+        lowerPotentialShipName.includes("planet") ||
+        lowerPotentialShipName.includes("moon") ||
+        lowerPotentialShipName.includes("sun") || // Could be "J121116 Sun"
+        lowerPotentialShipName.includes("star (") || // E.g. "Star (K0V type)"
+        celestialKeywords.some((keyword) =>
+          lowerPotentialShipName.includes(keyword.toLowerCase())
+        )
+      ) {
+        // Add more if needed
+        // console.log("Skipping celestial for threat analysis:", potentialShipName);
+        return null; // Skip planets, moons, and stars
+      }
     } else {
-        return null; // If no potential name could be extracted
+      return null; // If no potential name could be extracted
     }
-
-
 
     const identity = determineShipIdentity(potentialShipName); // Uses global shipDatabase
 
     // Always return an entity if we have a potential ship name, even if distance is just "-"
     if (potentialShipName && potentialShipName !== "-") {
-        return {
-            rawLine: lineText,
-            id: idStr,
-            isShip: identity.foundShip !== null, // True if found in shipDatabase
-            itemName: identity.effectiveName,    // Matched name from shipDatabase or original input
-            pilotName: (potentialPilotName && potentialPilotName !== identity.effectiveName) ? potentialPilotName : null,
-            shipDetails: identity.foundShip,     // Full object from shipDatabase or null
-            distanceKm: !isNaN(distanceKm) ? distanceKm : null, // Store null if distance was truly unparseable beyond "-"
-            distanceOriginalStr: distanceStr || "-" // Store original distance string
-        };
+      return {
+        rawLine: lineText,
+        id: idStr,
+        isShip: identity.foundShip !== null, // True if found in shipDatabase
+        itemName: identity.effectiveName, // Matched name from shipDatabase or original input
+        pilotName:
+          potentialPilotName && potentialPilotName !== identity.effectiveName
+            ? potentialPilotName
+            : null,
+        shipDetails: identity.foundShip, // Full object from shipDatabase or null
+        distanceKm: !isNaN(distanceKm) ? distanceKm : null, // Store null if distance was truly unparseable beyond "-"
+        distanceOriginalStr: distanceStr || "-", // Store original distance string
+      };
     }
-    
-    // console.warn(`parseDScanLineForEntities: Could not extract a meaningful entity from line: "${lineText}"`);
-    return null; 
-}
 
-// Modify parseDistanceToKm slightly to have an optional flag for "just check if parsable"
-function parseDistanceToKm(distanceStr, checkOnly = false) {
+    // console.warn(`parseDScanLineForEntities: Could not extract a meaningful entity from line: "${lineText}"`);
+    return null;
+  }
+
+  // Modify parseDistanceToKm slightly to have an optional flag for "just check if parsable"
+  function parseDistanceToKm(distanceStr, checkOnly = false) {
     if (distanceStr === "-" || !distanceStr || distanceStr.trim() === "") {
-        return checkOnly ? 0 : NaN; // If just checking, "-" is like a valid 0 distance entry
+      return checkOnly ? 0 : NaN; // If just checking, "-" is like a valid 0 distance entry
     }
     let distanceKmValue;
-    const val = safeParseFloat(distanceStr); 
+    const val = safeParseFloat(distanceStr);
     if (isNaN(val)) return checkOnly ? null : NaN; // If not a number at all
 
     if (distanceStr.toLowerCase().includes("au")) {
-        distanceKmValue = val * AU_KM;
+      distanceKmValue = val * AU_KM;
     } else if (distanceStr.toLowerCase().includes("km")) {
-        distanceKmValue = val;
-    } else if (distanceStr.toLowerCase().includes("m") && !distanceStr.toLowerCase().includes("km")) { 
-        distanceKmValue = val / 1000;
-    } else { // No unit, assume AU
-        distanceKmValue = val * AU_KM; 
+      distanceKmValue = val;
+    } else if (
+      distanceStr.toLowerCase().includes("m") &&
+      !distanceStr.toLowerCase().includes("km")
+    ) {
+      distanceKmValue = val / 1000;
+    } else {
+      // No unit, assume AU
+      distanceKmValue = val * AU_KM;
     }
     return isNaN(distanceKmValue) ? (checkOnly ? null : NaN) : distanceKmValue;
-}
+  }
 
   function assessThreat(shipDetails, pilotName) {
     // Placeholder - your logic from standalone tool will go here
@@ -2823,7 +2892,6 @@ function parseDistanceToKm(distanceStr, checkOnly = false) {
   }
 
   function handleGenerateDScanFromManualRanges() {
-    
     if (!manualRangeCelestialsList || !scanDataInput) return;
 
     let generatedDScanText = "";
@@ -2895,11 +2963,94 @@ function parseDistanceToKm(distanceStr, checkOnly = false) {
       parseScanButton.click();
     }
     -- */
-    alert("D-Scan text area has been populated with your manually entered ranges. You can now use 'Parse D-Scan & Select Refs' or 'Toggle D-Scan Rings'.");
-    console.log("Generated D-Scan text from manual ranges and populated textarea.");
+    alert(
+      "D-Scan text area has been populated with your manually entered ranges. You can now use 'Parse D-Scan & Select Refs' or 'Toggle D-Scan Rings'."
+    );
+    console.log(
+      "Generated D-Scan text from manual ranges and populated textarea."
+    );
     console.log(
       "Generated D-Scan text from manual ranges and initiated parsing."
     );
+  }
+
+  // --- Helper functions to reset modes and UI states ---
+  function resetGeneralCustomMarkerMode() {
+    isAddingCustomMarkerMode = false;
+    if (customMarkerControlsDiv) customMarkerControlsDiv.style.display = "none";
+    if (customMarkerInstructions)
+      customMarkerInstructions.textContent =
+        "Select shape & color, then CLICK ON MAP to place.";
+
+    // Re-enable other buttons
+    if (parseScanButton) parseScanButton.disabled = false;
+    if (trilaterateSelectedButton && selectedReferencePoints)
+      trilaterateSelectedButton.disabled = selectedReferencePoints.length !== 3;
+    else if (trilaterateSelectedButton)
+      trilaterateSelectedButton.disabled = true;
+    if (parseProbeDataButton) parseProbeDataButton.disabled = false;
+    if (setDscanOriginButton) setDscanOriginButton.disabled = false; // Re-enable this too
+    console.log("Exited general custom marker placement mode.");
+  }
+
+  function resetDScanOriginMode() {
+    isSettingDScanOrigin = false;
+    if (setDscanOriginButton) {
+      setDscanOriginButton.textContent = "Set Origin";
+      setDscanOriginButton.disabled = false;
+    }
+    // Re-enable other main buttons that might have been disabled by "Set Origin" mode
+    if (parseScanButton) parseScanButton.disabled = false;
+    if (trilaterateSelectedButton && selectedReferencePoints)
+      trilaterateSelectedButton.disabled = selectedReferencePoints.length !== 3;
+    else if (trilaterateSelectedButton)
+      trilaterateSelectedButton.disabled = true;
+    if (parseProbeDataButton) parseProbeDataButton.disabled = false;
+    if (prepareCustomMarkerButton) prepareCustomMarkerButton.disabled = false;
+    // if (customMarkerInstructions) customMarkerInstructions.textContent = "Select shape & color, then CLICK ON MAP to place.";
+    console.log("Exited 'Set D-Scan Origin' mode.");
+  }
+
+  // SolarSystem.js - SECTION 2 (Function Definitions)
+
+  function resetAllPlacementModes() {
+    console.log("Resetting all placement modes...");
+    isAddingCustomMarkerMode = false;
+    isSettingDScanOrigin = false;
+
+    // Hide UI specific to these modes
+    if (customMarkerControlsDiv) {
+      customMarkerControlsDiv.style.display = "none";
+    }
+    if (customMarkerInstructions) {
+      customMarkerInstructions.textContent =
+        "Select shape & color, then CLICK ON MAP to place."; // Reset
+    }
+
+    // Reset "Set Origin" button state
+    if (setDscanOriginButton) {
+      setDscanOriginButton.textContent = "Set Origin";
+      setDscanOriginButton.disabled = false;
+    }
+
+    // Re-enable main action buttons
+    if (prepareCustomMarkerButton) {
+      // The button to INITIATE custom marker mode
+      prepareCustomMarkerButton.disabled = false;
+    }
+    if (parseScanButton) {
+      parseScanButton.disabled = false;
+    }
+    if (trilaterateSelectedButton) {
+      // Only enable if 3 D-Scan refs are still selected
+      trilaterateSelectedButton.disabled = !(
+        selectedReferencePoints && selectedReferencePoints.length === 3
+      );
+    }
+    if (parseProbeDataButton) {
+      parseProbeDataButton.disabled = false;
+    }
+    console.log("All placement modes reset. UI and button states updated.");
   }
 
   // --- SECTION 3: Event Listener Attachments ---
@@ -2948,86 +3099,154 @@ function parseDistanceToKm(distanceStr, checkOnly = false) {
     });
 
     svgElement.addEventListener("click", (e) => {
-      console.log("--- GLOBAL SVG CLICK LISTENER FIRED --- Target:", e.target); // Log A
       console.log(
-        "Global SVG Click: isAddingCustomMarkerMode at this point is:",
-        isAddingCustomMarkerMode
-      ); // Log B
-
-      console.log(
-        "SVG clicked. isAddingCustomMarkerMode:",
+        "--- SVG CLICK --- AddCustom:",
         isAddingCustomMarkerMode,
+        "SetDScanOrigin:",
+        isSettingDScanOrigin,
         "Target:",
-        e.target
-      ); // DEBUG
+        e.target.tagName
+      );
 
-      if (isAddingCustomMarkerMode) {
-        console.log(
-          "  Global SVG Click: Entering 'isAddingCustomMarkerMode' block."
-        ); // Log C
+      // Helper to check if click was on an existing interactive marker part
+      function isClickOnExistingInteractiveMarker(targetElement) {
+        return (
+          targetElement.closest(".celestial-body-svg") ||
+          targetElement.closest(".scanner-marker-cross") ||
+          targetElement.closest(".scanner-marker-label") ||
+          targetElement.closest(".custom-marker-shape") ||
+          targetElement.closest(".custom-marker-label")
+        );
+      }
 
-        console.log(
-          "SVG click in add mode. Target:",
-          e.target.tagName,
-          "SVG element is:",
-          svgElement.tagName
-        ); // DEBUG
+      // --- HANDLE "SET D-SCAN ORIGIN" MODE ---
+      if (isSettingDScanOrigin) {
+        console.log("SVG Click: In 'Set D-Scan Origin' mode.");
 
-        // Prevent placing on an existing interactive element if it's not the SVG canvas itself
-        if (e.target !== svgElement) {
-          // Check if the click was directly on the SVG or on a child
+        // Prevent placing on an existing interactive element
+        if (
+          e.target !== svgElement &&
+          e.target.tagName !== "svg" &&
+          isClickOnExistingInteractiveMarker(e.target)
+        ) {
           console.log(
-            "  Target is not the SVG element itself. Target tagName:",
-            e.target.tagName
-          ); // DEBUG
-          // Allow clicking on orbit lines (circles in baseOrbitsGroup) or the SVG background
-          // Disallow if clicking on celestial bodies, existing S-markers, or custom markers
-          if (
-            e.target.closest(".celestial-body-svg") ||
-            e.target.closest(".scanner-marker-cross") ||
-            e.target.closest(".scanner-marker-label") ||
-            e.target.closest(".custom-marker-shape") || // Check for custom shapes
-            e.target.closest(".custom-marker-label")
-          ) {
-            // Check for custom labels
-            console.log(
-              "  Custom marker placement: Click was on an existing interactive element, not placing."
-            ); // DEBUG
-            return;
-          }
-          // If it's a simple circle (like an orbit) and not the SVG itself, allow placement
-          // This might need refinement if other non-interactive circles are present
-          if (
-            e.target.tagName === "circle" &&
-            !e.target.classList.contains("celestial-body-svg") &&
-            !e.target.classList.contains("custom-marker-shape")
-          ) {
-            console.log("  Target is likely an orbit line. Proceeding.");
-          } else if (e.target !== svgElement && e.target.tagName !== "svg") {
-            // If it's some other child that's not an orbit
-            console.log(
-              "  Target was an unhandled child element. Not placing yet."
-            );
-            // For now, let's only allow placement on SVG background or orbits.
-            // If you want to place on any non-interactive child, remove this specific return.
-            // return; // UNCOMMENT THIS if you ONLY want placement on SVG background or specific allowed children
-          }
-        } else {
-          console.log(
-            "  Target IS the SVG element itself. Proceeding with placement attempt."
+            "D-Scan Origin Placement: Click was on an existing interactive element, not placing."
           );
+          // Do not reset mode here, let user try clicking elsewhere or cancel via a button if one is added for this mode
+          return;
         }
 
         const CTM = svgElement.getScreenCTM()?.inverse();
         if (!CTM) {
-          console.error("SVG CTM not available for custom marker placement.");
+          console.error("SVG CTM not available for D-Scan origin.");
+          resetAllPlacementModes(); // Exit mode if CTM fails
           return;
         }
-
         const svgPoint = svgElement.createSVGPoint();
         svgPoint.x = e.clientX;
         svgPoint.y = e.clientY;
-        const mapClickCoords = svgPoint.matrixTransform(CTM); // Coords in SVG viewBox units
+        const mapClickCoords = svgPoint.matrixTransform(CTM);
+
+        const dscanOriginLabel = prompt(
+          "Enter label for this D-Scan Origin (e.g., Perch Alpha):",
+          `DSO-${customMarkerCounter + 1}`
+        );
+
+        if (dscanOriginLabel !== null) {
+          // User clicked OK
+          // Remove previous D-Scan Origin marker if it exists
+          if (currentActiveDScanOriginMarkerId) {
+            const oldMarkerEl = document.getElementById(
+              currentActiveDScanOriginMarkerId
+            );
+            if (oldMarkerEl) oldMarkerEl.remove();
+            if (plottedMarkerData[currentActiveDScanOriginMarkerId]) {
+              const oldRow = plottedMarkersTableBody.querySelector(
+                `tr[data-marker-id="${currentActiveDScanOriginMarkerId}"]`
+              );
+              if (oldRow) oldRow.remove();
+              delete plottedMarkerData[currentActiveDScanOriginMarkerId];
+            }
+          }
+
+          customMarkerCounter++; // Use the general custom marker counter
+          const markerId = `dscanOriginMarker_${customMarkerCounter}`; // Specific prefix
+          currentActiveDScanOriginMarkerId = markerId;
+
+          if (
+            typeof currentSystemScaleFactor !== "number" ||
+            currentSystemScaleFactor === 0 ||
+            isNaN(currentSystemScaleFactor)
+          ) {
+            alert("Map scale factor error. Cannot place D-Scan origin marker.");
+            currentActiveDScanOriginMarkerId = null; // Clear if placement failed
+            resetAllPlacementModes();
+            return;
+          }
+          const kmX = mapClickCoords.x / currentSystemScaleFactor;
+          const kmZ = mapClickCoords.y / currentSystemScaleFactor;
+          const dscanRangeAUVal = parseFloat(dscanRangeInput?.value) || 14.3;
+
+          plottedMarkerData[markerId] = {
+            label: dscanOriginLabel.trim() || `DSO-${customMarkerCounter}`,
+            x_km: kmX,
+            z_km: kmZ,
+            notes: `D-Scan Origin, Range: ${dscanRangeAUVal.toFixed(1)} AU`,
+            isCustom: true,
+            isDScanOrigin: true,
+            shape: "dscan_area",
+            color: "orange", // Predefined for D-Scan origin
+          };
+
+          createAndPlotCustomMarker(
+            markerId,
+            plottedMarkerData[markerId].label,
+            "dscan_area",
+            "orange",
+            mapClickCoords.x,
+            mapClickCoords.y
+          );
+          addMarkerToTable(
+            markerId,
+            plottedMarkerData[markerId].label,
+            kmX,
+            kmZ
+          );
+          if (dscanOriginInput)
+            dscanOriginInput.value = plottedMarkerData[markerId].label;
+          console.log(
+            `D-Scan Origin marker "${plottedMarkerData[markerId].label}" placed.`
+          );
+        } else {
+          console.log("D-Scan Origin label prompt cancelled by user.");
+        }
+        resetAllPlacementModes(); // Exit "Set D-Scan Origin" mode after one placement attempt (OK or Cancel on prompt)
+
+        // --- HANDLE GENERAL "ADD CUSTOM MARKER" MODE ---
+      } else if (isAddingCustomMarkerMode) {
+        console.log("SVG Click: In general 'Add Custom Marker' mode.");
+        if (
+          e.target !== svgElement &&
+          e.target.tagName !== "svg" &&
+          isClickOnExistingInteractiveMarker(e.target)
+        ) {
+          console.log(
+            "General Custom Marker: Clicked on an existing interactive element, not placing."
+          );
+          // Do not reset mode here, let user try clicking elsewhere or use the cancel button
+          return;
+        }
+
+        const CTM = svgElement.getScreenCTM()?.inverse();
+        if (!CTM) {
+          console.error("SVG CTM not available for custom marker.");
+          resetAllPlacementModes();
+          return;
+        }
+        const svgPoint = svgElement.createSVGPoint();
+        svgPoint.x = e.clientX;
+        svgPoint.y = e.clientY;
+        const mapClickCoords = svgPoint.matrixTransform(CTM);
 
         const selectedShape = markerShapeSelect
           ? markerShapeSelect.value
@@ -3035,43 +3254,23 @@ function parseDistanceToKm(distanceStr, checkOnly = false) {
         const selectedColor = markerColorSelect
           ? markerColorSelect.value
           : "red";
-
         const markerLabelText = prompt(
-          "Enter label for this custom marker:",
+          `Enter label for this ${selectedShape} marker:`,
           `Custom ${customMarkerCounter + 1}`
         );
 
         if (markerLabelText !== null) {
-          // User clicked "OK" on the prompt
+          // User clicked OK
           customMarkerCounter++;
           const markerId = `customMarker_${customMarkerCounter}`;
-
           if (
             typeof currentSystemScaleFactor !== "number" ||
             currentSystemScaleFactor === 0 ||
             isNaN(currentSystemScaleFactor)
           ) {
-            alert(
-              "Map scale factor is not set. Cannot calculate marker coordinates in km. Please load a system."
-            );
-            console.error(
-              "Custom Marker: currentSystemScaleFactor is invalid:",
-              currentSystemScaleFactor
-            );
-            customMarkerCounter--;
-            // Exit add mode
-            isAddingCustomMarkerMode = false;
-            if (customMarkerControlsDiv)
-              customMarkerControlsDiv.style.display = "none";
-            if (customMarkerInstructions)
-              customMarkerInstructions.textContent =
-                "Select shape & color, then CLICK ON MAP to place.";
-            if (parseScanButton) parseScanButton.disabled = false;
-            if (trilaterateSelectedButton)
-              trilaterateSelectedButton.disabled = !(
-                selectedReferencePoints && selectedReferencePoints.length === 3
-              );
-            if (parseProbeDataButton) parseProbeDataButton.disabled = false;
+            alert("Map scale factor error. Cannot place custom marker.");
+            customMarkerCounter--; // Decrement as placement failed
+            resetAllPlacementModes();
             return;
           }
           const kmX = mapClickCoords.x / currentSystemScaleFactor;
@@ -3085,16 +3284,16 @@ function parseDistanceToKm(distanceStr, checkOnly = false) {
             isCustom: true,
             shape: selectedShape,
             color: selectedColor,
+            isDScanOrigin: false, // Mark as not a D-Scan origin
           };
 
-          // Create and plot the custom marker using its SVG coordinates
           createAndPlotCustomMarker(
             markerId,
             plottedMarkerData[markerId].label,
             selectedShape,
             selectedColor,
-            mapClickCoords.x, // Pass SVG X
-            mapClickCoords.y // Pass SVG Y
+            mapClickCoords.x,
+            mapClickCoords.y
           );
           addMarkerToTable(
             markerId,
@@ -3102,78 +3301,20 @@ function parseDistanceToKm(distanceStr, checkOnly = false) {
             kmX,
             kmZ
           );
-
-          // --- NEW: Update D-Scan Origin Input if this was a D-Scan Area marker ---
-            if (selectedShape === "dscan_area") {
-                const dscanOriginInputEl = document.getElementById('dscanOriginInput');
-                if (dscanOriginInputEl) {
-                    dscanOriginInputEl.value = plottedMarkerData[markerId].label; // Use the label of the new marker
-                    console.log(`D-Scan origin input updated to: ${dscanOriginInputEl.value}`);
-
-                    // Store this as the "active" D-Scan origin for potential dynamic range updates
-                    // You might need a global variable: let activeDScanOriginMarkerIdForRangeUpdate = markerId;
-                    // This 'activeDScanOriginMarkerIdForRangeUpdate' would then be used by the
-                    // event listener on the 'dscanRangeInput' to know which marker's circle to resize.
-                } else {
-                    console.warn("dscanOriginInput element not found in DOM.");
-                }
-            }
-            // --- END NEW ---
-
-          // Automatically exit adding mode after successful placement
-          isAddingCustomMarkerMode = false;
-          if (customMarkerControlsDiv) {
-            customMarkerControlsDiv.style.display = "none";
-          }
-          if (customMarkerInstructions) {
-            customMarkerInstructions.textContent =
-              "Select shape & color, then CLICK ON MAP to place.";
-          }
-          if (parseScanButton) parseScanButton.disabled = false;
-          if (trilaterateSelectedButton) {
-            trilaterateSelectedButton.disabled = !(
-              selectedReferencePoints && selectedReferencePoints.length === 3
-            );
-          }
-          if (parseProbeDataButton) parseProbeDataButton.disabled = false;
           console.log(
-            "Exited custom marker placement mode after placing one marker."
+            `General Custom marker "${plottedMarkerData[markerId].label}" placed.`
           );
         } else {
-          console.log(
-            "Custom marker label prompt cancelled by user. Staying in add marker mode unless user clicks Cancel button."
-          );
-          console.log("  Global SVG Click: NOT in 'isAddingCustomMarkerMode'."); // Log D
+          console.log("General Custom marker label prompt cancelled by user.");
         }
+        resetAllPlacementModes(); // Exit general "Add Custom Marker" mode after one placement attempt
       }
-      // Add other global SVG click logic here if needed
-
-      if (
-        modalTrilaterateButton &&
-        typeof handleModalTrilaterate === "function"
-      ) {
-        // Check function exists
-        modalTrilaterateButton.addEventListener(
-          "click",
-          handleModalTrilaterate
-        );
-      } else {
-        console.error(
-          "modalTrilaterateButton or its handler handleModalTrilaterate not found/defined."
-        );
-      }
-
-      if (modalCancelButton && typeof handleModalCancel === "function") {
-        // Check function exists
-        modalCancelButton.addEventListener("click", handleModalCancel);
-      } else {
-        console.error(
-          "modalCancelButton or its handler handleModalCancel not found/defined."
-        );
-      }
+      // No other global click actions if not in a placement mode
     });
   } else {
-    console.error("svgElement not found, global listeners not attached.");
+    console.error(
+      "CRITICAL: svgElement not found, global click listener for marker placement cannot be attached."
+    );
   }
 
   console.log("Event listeners attached.");
@@ -3281,24 +3422,36 @@ function parseDistanceToKm(distanceStr, checkOnly = false) {
   }
 
   // Custom Marker Controls Event Listeners
-  if (
-    prepareCustomMarkerButton &&
-    customMarkerControlsDiv &&
-    typeof handleBodyMouseMoveSVG !== "undefined"
-  ) {
-    // handleBodyMouseMoveSVG was removed, so this condition might change
+  if (prepareCustomMarkerButton && customMarkerControlsDiv) {
     prepareCustomMarkerButton.addEventListener("click", () => {
-      isAddingCustomMarkerMode = true;
+      isAddingCustomMarkerMode = true; // Enter general custom marker mode
+      isSettingDScanOrigin = false; // Ensure NOT in D-Scan origin mode
       console.log(
-        "prepareCustomMarkerButton clicked: isAddingCustomMarkerMode set to true"
+        "Prepare Custom Marker: isAddingCustomMarkerMode=true, isSettingDScanOrigin=false"
       );
+
       customMarkerControlsDiv.style.display = "flex";
+      if (markerShapeSelect && markerShapeSelect.value === "dscan_area") {
+        // If dscan_area is still selected
+        markerShapeSelect.value = "circle"; // Default to circle for general custom markers
+        console.log(
+          "Shape selector defaulted to 'circle' for general custom marker."
+        );
+      } else if (markerShapeSelect && !markerShapeSelect.value) {
+        // If nothing selected (e.g. placeholder)
+        markerShapeSelect.value = "circle";
+        console.log("Shape selector defaulted to 'circle' (was empty).");
+      }
+
       if (customMarkerInstructions)
         customMarkerInstructions.textContent =
           "Select shape & color, then CLICK ON MAP to place. You'll be prompted for a label.";
+
+      // Disable other major action buttons
       if (parseScanButton) parseScanButton.disabled = true;
       if (trilaterateSelectedButton) trilaterateSelectedButton.disabled = true;
       if (parseProbeDataButton) parseProbeDataButton.disabled = true;
+      if (setDscanOriginButton) setDscanOriginButton.disabled = true; // Can't set origin while adding general marker
     });
   } else {
     console.error(
@@ -3356,6 +3509,34 @@ function parseDistanceToKm(distanceStr, checkOnly = false) {
   if (cancelManualRangeButton) {
     cancelManualRangeButton.addEventListener("click", () => {
       if (manualRangeModal) manualRangeModal.style.display = "none";
+    });
+  }
+
+  /* --- Set D-Scan Origin Button --- -*/
+  if (setDscanOriginButton) {
+    setDscanOriginButton.addEventListener("click", () => {
+      isSettingDScanOrigin = true;
+      isAddingCustomMarkerMode = false; // Ensure not in general custom marker mode
+      // Optionally disable other buttons
+      if (parseScanButton) parseScanButton.disabled = true;
+      if (trilaterateSelectedButton) trilaterateSelectedButton.disabled = true;
+      if (parseProbeDataButton) parseProbeDataButton.disabled = true;
+      if (prepareCustomMarkerButton) prepareCustomMarkerButton.disabled = true;
+
+      // Update UI to indicate mode
+      setDscanOriginButton.textContent = "Click Map to Place Origin...";
+      setDscanOriginButton.disabled = true; // Disable until placement or cancel
+      if (customMarkerInstructions)
+        customMarkerInstructions.textContent =
+          "Click on the map to set D-Scan origin."; // If using this element
+      console.log("Entered 'Set D-Scan Origin' mode.");
+    });
+  }
+
+  if (cancelCustomMarkerButton && customMarkerControlsDiv) {
+    cancelCustomMarkerButton.addEventListener("click", () => {
+      console.log("Cancel Custom Marker button clicked.");
+      resetAllPlacementModes(); // Use the central reset function
     });
   }
 
