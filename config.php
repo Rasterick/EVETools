@@ -1,6 +1,6 @@
 <?php
 
-$host = 'localhost';
-$dbname = 'evesystems';
-$username = 'admin';
-$password = 'R4twing51';
+$host = '';
+$dbname = '';
+$username = '';
+$password = '';
