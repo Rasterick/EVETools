@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Test Save Mapper State</title>
+    <style>
+        body { font-family: sans-serif; margin: 20px; background-color: #f4f4f4; }
+        textarea { width: 90%; height: 200px; margin-bottom: 10px; }
+        button { padding: 10px 15px; background-color: #007bff; color: white; border: none; cursor: pointer; }
+        button:hover { background-color: #0056b3; }
+        pre { background-color: #eee; padding: 10px; border: 1px solid #ccc; white-space: pre-wrap; word-wrap: break-word; }
+    </style>
+</head>
+<body>
+    <h1>Test Save Mapper State</h1>
+    <p>Paste the full JSON string (the stringified 'stateToSave' object from your JS) below and submit.</p>
+    
+    <textarea id="jsonDataPayload" placeholder="Paste stringified JSON state here..."></textarea>
+    <button onclick="submitState()">Save State to DB</button>
+
+    <h2>Server Response:</h2>
+    <pre id="responseOutput">Waiting for submission...</pre>
+
+    <script>
+        async function submitState() {
+            const payload = document.getElementById('jsonDataPayload').value;
+            const responseOutput = document.getElementById('responseOutput');
+            responseOutput.textContent = 'Submitting...';
+
+            if (!payload.trim()) {
+                responseOutput.textContent = 'Error: Payload cannot be empty.';
+                return;
+            }
+
+            try {
+                // Validate if it's somewhat JSON-like before sending (optional)
+                JSON.parse(payload); 
+            } catch (e) {
+                responseOutput.textContent = 'Error: Input is not valid JSON. Please paste the stringified object.\n' + e.message;
+                return;
+            }
+
+            try {
+                // Assuming save_mapper_state.php is in the same directory or an 'api' subdirectory
+                // Adjust the URL as needed for your test server structure
+                const response = await fetch('save_mapper_state.php', { 
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: payload // Send the raw JSON string
+                });
+
+                const resultText = await response.text(); // Get raw text first for debugging
+                responseOutput.textContent = `Status: ${response.status} ${response.statusText}\n\n`;
+                
+                try {
+                    const resultJson = JSON.parse(resultText); // Now try to parse as JSON
+                    responseOutput.textContent += JSON.stringify(resultJson, null, 2);
+                    if (resultJson.success && resultJson.url) {
+                        console.log("Shareable URL:", resultJson.url);
+                        alert("Saved successfully! URL: " + resultJson.url);
+                    } else if (!resultJson.success) {
+                         alert("Save failed: " + resultJson.message);
+                    }
+                } catch (jsonError) {
+                     responseOutput.textContent += "Response was not valid JSON:\n" + resultText;
+                     console.error("JSON parse error from server response:", jsonError);
+                }
+
+            } catch (error) {
+                responseOutput.textContent = 'Fetch Error: ' + error.message;
+                console.error('Fetch Error:', error);
+            }
+        }
+    </script>
+</body>
+</html>

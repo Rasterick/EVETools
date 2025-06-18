@@ -10,47 +10,95 @@ html, body {
 body { display: flex; flex-direction: column; height: 100vh; }
 
 #appHeader {
-    background-color: #101010; border-bottom: 1px solid #000;
-    color: #00A8FF; padding: 5px 15px; width: 100%; 
-    flex-shrink: 0; box-sizing: border-box; display: flex;
-    justify-content: space-between; align-items: center;
+    background-color: #101010; 
+    border-bottom: 1px solid #000;
+    color: #00A8FF; 
+    padding: 5px 15px; 
+    width: 100%; 
+    flex-shrink: 0; 
+    box-sizing: border-box; 
+    display: flex;
+    justify-content: space-between; /* Title on left, controls on right */
+    align-items: center; 
+    min-height: 45px; /* Ensure header has a minimum height */
 }
 /* ------- Header Styles ------- */
 #currentSystemTitleHeader { flex-grow: 1; /* Allows it to take space */ }
 
-#systemDetailsHeader {
+#systemDetailsHeader { 
     display: flex;
-    gap: 15px; /* Space between detail items */
+    gap: 15px;
     font-size: 11px;
     color: #a0a0a0;
-    margin: 0 20px; /* Space around this block */
-    flex-shrink: 0; /* Prevent shrinking */
+    margin: 0 auto; /* Try to center it between title and right controls */
+    flex-shrink: 0;
 }
-#systemDetailsHeader span > span { /* The actual value spans */
-    color: #00A8FF; /* EVE Blue for values */
-    font-weight: bold;
-}
+
+#systemDetailsHeader span > span { color: #00A8FF; font-weight: bold; }
+
 #systemSelectionControlsHeader { flex-shrink: 0; }
 
 
 /*--- Header Elements ---*/
 
 #appHeader h1#currentSystemTitleHeader {
-    margin: 0; font-size: 18px; font-weight: normal; letter-spacing: 1px;
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex-grow: 1;
+    margin: 0; 
+    font-size: 18px; 
+    font-weight: normal; 
+    letter-spacing: 1px;
+    white-space: nowrap; 
+    overflow: hidden;    
+    text-overflow: ellipsis; 
+    /* flex-grow: 1; /* Let systemDetailsHeader and headerControlsWrapper define their size first */
+    margin-right: 20px; /* Space before system details */
 }
-#systemSelectionControlsHeader { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+
+
+#headerControlsWrapper { /* NEW: Wrapper for right-side header controls */
+    display: flex;
+    align-items: center;
+    gap: 15px; /* Space between system selection and save button */
+    flex-shrink: 0;
+}
+
+
+#systemSelectionControlsHeader { 
+    display: flex; 
+    align-items: center; 
+    gap: 8px; 
+    /* flex-shrink: 0; /* Already handled by parent wrapper */
+}
+
 #systemSelectionControlsHeader input[type="text"]#systemIdInput {
     padding: 6px 8px; font-size: 12px; background-color: #2a2d30; 
     color: #c8c8c8; border: 1px solid #101010; border-radius: 3px;
     width: 180px; box-sizing: border-box;
 }
+
 #systemSelectionControlsHeader button#loadSystemButton {
+    /* ... same as before ... */
     padding: 6px 12px; font-size: 12px; cursor: pointer;
     background-color: #005f88; color: #fff; border: 1px solid #003c56; 
     border-radius: 3px; box-sizing: border-box; text-align: center; white-space: nowrap;
 }
+
+
 #systemSelectionControlsHeader button#loadSystemButton:hover { background-color: #0077a9; }
+
+#appHeader #saveStateToUrlButton {
+    padding: 6px 12px;
+    font-size: 12px;
+    cursor: pointer;
+    background-color: #3a3d40; /* Slightly different from load, or same as other panel buttons */
+    color: #00A8FF; /* EVE Blue text */
+    border: 1px solid #101010;
+    border-radius: 3px;
+    white-space: nowrap;
+}
+#appHeader #saveStateToUrlButton:hover {
+    background-color: #4a4d50;
+}
+
 
 #appGridContainer {
     display: grid;

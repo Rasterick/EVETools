@@ -9,18 +9,24 @@
 </head>
 
 <body>
-  <header id="appHeader">
+<header id="appHeader">
     <h1 id="currentSystemTitleHeader">System Information - J121116</h1>
-    <div id="systemDetailsHeader">
-      <span>Class: <span id="hdrSysClass">N/A</span></span>
-      <span>Effect: <span id="hdrSysEffect">N/A</span></span>
-      <span>Statics: <span id="hdrSysStatics">N/A</span></span>
+    
+    <div id="systemDetailsHeader"> 
+        <span>Class: <span id="hdrSysClass">N/A</span></span>
+        <span>Effect: <span id="hdrSysEffect">N/A</span></span>
+        <span>Statics: <span id="hdrSysStatics">N/A</span></span>
     </div>
-    <div id="systemSelectionControlsHeader">
-      <input type="text" id="systemIdInput" placeholder="Enter System Name" />
-      <button id="loadSystemButton">Load System</button>
+
+    <div id="headerControlsWrapper"> 
+        <div id="systemSelectionControlsHeader">
+            <input type="text" id="systemIdInput" placeholder="Enter System Name" />
+            <button id="loadSystemButton">Load System</button>
+        </div>
+
+        <button id="saveStateToUrlButton" title="Save current map state to a shareable URL">Save/Share State</button>
     </div>
-  </header>
+</header>
 
   <main id="appGridContainer">
     <div id="mapWindow" class="grid-item">
@@ -193,11 +199,11 @@
           </div>
           <div><label for="markerColor">Color:</label><select id="markerColor">
               <option value="red" style="background-color: red; color: white">Red</option>
-              <option value="lime" style="background-color: lime;">Lime</option>
+              <option value="Green" style="background-color: rgb(7, 143, 7);">Green</option>
               <option value="blue" style="background-color: blue; color: white">Blue</option>
               <option value="yellow" style="background-color: yellow; color: black">Yellow</option>
               <option value="cyan" style="background-color: cyan; color: black">Cyan</option>
-              <option value="magenta" style="background-color: magenta;">Magenta</option>
+              <option value="Purple" style="background-color: rgb(150, 7, 150);">Purple</option>
               <option value="white" style="background-color: white; color: black">White</option>
               <option value="orange" style="background-color: orange;">Orange</option>
             </select></div>
