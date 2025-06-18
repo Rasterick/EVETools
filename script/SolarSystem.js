@@ -240,7 +240,67 @@ let currentUnlistedEntriesData = {};
 // It should look something like this (I'll paste the full structure from your last JS file for this function)
 
 async function fetchAndRenderSystem(systemIdentifier) { // systemIdentifier is the name like "J121116"
-    console.log(`Fetching data for system: ${systemIdentifier}`);
+    
+  console.log(`Fetching data for system: ${systemIdentifier}`);
+    currentLoadedSystemName = systemIdentifier.toUpperCase(); 
+    console.log(`Set currentLoadedSystemName (tentative) to: ${currentLoadedSystemName}`);
+
+    // --- FULL RESET ---
+    if (svgElement) { 
+        svgElement.innerHTML = ''; 
+        console.log("Cleared svgElement innerHTML");
+    }
+    if (plottedMarkersTableBody) plottedMarkersTableBody.innerHTML = "";
+    if (probeScanTableBody) probeScanTableBody.innerHTML = "";
+    
+    // --- ADD THIS LINE TO CLEAR THE TEXTAREA ---
+    if (scanDataInput) {
+        scanDataInput.value = "";
+        console.log("Cleared scanDataInput textarea.");
+    }
+    // --- END OF ADDED LINE ---
+
+    if (selectableCelestialsContainer && selectableCelestialsContainer.style) selectableCelestialsContainer.style.display = "none"; 
+    if (selectRefsModal && selectRefsModal.style) selectRefsModal.style.display = "none"; 
+
+    // Clear D-Scan related UI and data
+    if (window.classSummaryTableBody) classSummaryTableBody.innerHTML = '';
+    if (window.shipSummaryTableBody) shipSummaryTableBody.innerHTML = '';
+    if (window.unlistedEntriesTableBody) unlistedEntriesTableBody.innerHTML = '';
+    if (window.malformedLinesInfoThreat) malformedLinesInfoThreat.innerHTML = '<p>No D-Scan data analysed yet.</p>';
+    const dScanAnalysisTitleEl = document.getElementById('dScanAnalysisTitle');
+    if (dScanAnalysisTitleEl) dScanAnalysisTitleEl.textContent = 'D-Scan Threat Analysis';
+    if (dscanOriginInput) dscanOriginInput.value = ""; // Clear D-Scan origin field
+    // dscanRangeInput.value = "14.3"; // Optionally reset D-Scan range input to default
+
+    currentSystemCelestials = []; 
+    scannerPosMarkerCounter = 0; customMarkerCounter = 0;
+    plottedMarkerData = {}; parsedProbeSignatures = [];
+    selectedReferencePoints = []; knownPointsFromCurrentScan = []; 
+    currentClassSummaryData = {}; currentShipSummaryData = []; currentUnlistedEntriesData = {}; // Reset threat data
+    
+    if (typeof updateSelectionCountAndButton === 'function') updateSelectionCountAndButton();
+    isLinkingProbeSignature = false; signatureToLink = null; 
+    isAddingCustomMarkerMode = false; isSettingDScanOrigin = false; currentActiveDScanOriginMarkerId = null;
+
+    if (customMarkerControlsDiv && customMarkerControlsDiv.style) customMarkerControlsDiv.style.display = 'none';
+    
+    // Reset button states
+    if (parseScanButton) parseScanButton.disabled = false;
+    if (trilaterateSelectedButton) trilaterateSelectedButton.disabled = true; 
+    if (parseProbeDataButton) parseProbeDataButton.disabled = false;
+    if (prepareCustomMarkerButton) prepareCustomMarkerButton.disabled = false;
+    if (setDscanOriginButton) { setDscanOriginButton.disabled = false; setDscanOriginButton.textContent = "Set Origin"; }
+    if (toggleSignatureZonesButton) toggleSignatureZonesButton.textContent = "Show Signature Zones";
+    if (signatureZonesGroup && signatureZonesGroup.style) signatureZonesGroup.style.display = 'none'; else if (signatureZonesGroup) signatureZonesGroup.innerHTML = '';
+    if (dscanRangeCirclesGroup) { 
+        while (dscanRangeCirclesGroup.firstChild) dscanRangeCirclesGroup.removeChild(dscanRangeCirclesGroup.firstChild);
+        dscanRangeCirclesGroup.style.display = 'none';
+    }
+    if (toggleDScanRangeRingsButton) toggleDScanRangeRingsButton.textContent = "Show D-Scan Rings";
+
+    console.log("All previous system state and UI fully cleared/reset for new system load.");
+    // --- END FULL RESET ---
 
     // --- Update currentLoadedSystemName at the START of the fetch attempt ---
     // We use what was passed in. If PHP returns a slightly different canonical name, we'll update it later.
@@ -3170,69 +3230,72 @@ async function saveAppStateToUrl() { // Made async because of fetch
 
 
 // --- NEW FUNCTION (in SECTION 2) ---
+// loadAppStateFromUrl: Handles the OLD #state= HASH method
 function loadAppStateFromUrl() {
-    console.log("Checking for app state in URL hash...");
+    console.log("Checking for app state in URL HASH (#state=)...");
     if (window.location.hash && window.location.hash.startsWith("#state=")) {
         const encodedData = window.location.hash.substring("#state=".length);
-        if (!encodedData) {
-            console.log("No state data found in hash.");
-            return false; // Indicate no state was loaded
-        }
-
+        // ... (your existing robust decoding for base64 from hash) ...
         try {
-            // 1. Decode URL Component
             const base64Encoded = decodeURIComponent(encodedData);
-            console.log("loadAppStateFromUrl: base64Encoded from URL (sample):", base64Encoded.substring(0,100) + "...");
-            // 2. Decode Base64
             const jsonString = atob(base64Encoded);
-            console.log("loadAppStateFromUrl: jsonString after atob (sample):", jsonString.substring(0,200) + "..."); 
-
-             if (jsonString === "undefined") { // Case sensitive check
-            console.error("loadAppStateFromUrl CRITICAL: atob() resulted in the literal string 'undefined'.");
-            throw new Error("Decoded state is the string 'undefined'.");
-        }
-        if (typeof jsonString !== 'string' || jsonString.trim() === "") {
-             console.error("loadAppStateFromUrl CRITICAL: atob() resulted in empty or non-string data:", jsonString);
-            throw new Error("Decoded state is empty or not a string.");
-        }
-            // 3. Parse JSON
+            if (jsonString === "undefined" || typeof jsonString !== 'string' || jsonString.trim() === "") {
+                throw new Error("Decoded hash state is invalid string.");
+            }
             const loadedState = JSON.parse(jsonString);
-
-            console.log("Successfully decoded state from URL:", loadedState);
-
-            if (loadedState.version !== 1) {
-                alert("Saved state is from an incompatible version. Cannot load.");
-                return false;
+            if (!loadedState || typeof loadedState !== 'object' || loadedState.version !== 1) {
+                throw new Error("Parsed hash state is invalid or wrong version.");
             }
-
-            // --- Restore State ---
-            // A. System Name (this will trigger fetchAndRenderSystem)
-            if (loadedState.systemName) {
-                // This is tricky. fetchAndRenderSystem will clear everything.
-                // We need to load the system, THEN apply markers.
-                // So, store loadedState globally for a moment.
-                window.pendingLoadedState = loadedState; // Temporary global
-                // The initial fetchAndRenderSystem in initializeApp will use default or this:
-                if (systemIdInput) systemIdInput.value = loadedState.systemName; // Set input for clarity
-                
-                // The main fetchAndRenderSystem will be called by initializeApp.
-                // After it completes, we will apply the rest of the state.
-                console.log("State indicates system:", loadedState.systemName, "- map will load, then markers.");
-                return true; // Indicate that a state load is pending map render
-            }
-
+            window.pendingLoadedState = loadedState; // Set for applyPendingLoadedState
+            console.log("State successfully decoded from URL HASH.");
+            return true; // Indicate state found and is pending application
         } catch (error) {
-            console.error("Error loading state from URL:", error);
-            alert("Could not load saved state from URL. It might be corrupted or too old.");
-            // Clear the bad hash
+            console.error("Error loading state from URL HASH:", error);
+            alert("Could not load saved state from URL hash. It might be corrupted.");
             if (history.replaceState) {
                 history.replaceState(null, '', window.location.pathname + window.location.search);
-            } else {
-                window.location.hash = '';
-            }
+            } else { window.location.hash = ''; }
+            return false;
         }
     }
-    return false; // No state found or error
+    return false; // No #state= hash found
+}
+
+// fetchAndApplyStateFromServer: Handles NEW ?map_id= SHORT URL method
+async function fetchAndApplyStateFromServer(mapId) {
+    console.log(`Attempting to load state from server for map_id: ${mapId}`);
+    try {
+        // Ensure path to load_mapper_state.php is correct
+        const response = await fetch(`../load_mapper_state.php?map_id=${encodeURIComponent(mapId)}`); 
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({ message: `Failed to load map state ${mapId}. Server error: ${response.status}` }));
+            throw new Error(errorData.message);
+        }
+        const serverResult = await response.json();
+        if (serverResult.success && serverResult.data_payload) {
+            const stateJsonString = serverResult.data_payload;
+            const loadedState = JSON.parse(stateJsonString); // Parse the payload string
+
+            if (!loadedState || typeof loadedState !== 'object' || loadedState.version !== 1) {
+                throw new Error("Loaded state from server is invalid or wrong version.");
+            }
+            window.pendingLoadedState = loadedState; // Set for applyPendingLoadedState
+            console.log(`State for map_id ${mapId} successfully loaded from server.`);
+            return true; // Indicate state found and is pending application
+        } else {
+            throw new Error(serverResult.message || "Failed to retrieve valid data_payload for map_id.");
+        }
+    } catch (error) {
+        console.error(`Error loading state from server (map_id: ${mapId}):`, error);
+        alert(`Could not load shared map state: ${error.message}`);
+        // Clear bad query param to prevent re-attempt on refresh
+        if (history.replaceState) {
+            const url = new URL(window.location);
+            url.searchParams.delete('map_id');
+            history.replaceState(null, '', url.pathname + url.search + url.hash);
+        }
+        return false;
+    }
 }
 
 // --- NEW FUNCTION (in SECTION 2) ---
@@ -3914,41 +3977,59 @@ if (saveStateToUrlButton && typeof saveAppStateToUrl === 'function') {
 
   // --- SECTION 4: Initial Render Call ---
   // --- INITIAL RENDER CALL ---
+// --- SECTION 4: Initial Application Initialization ---
 async function initializeApp() {
     console.log("Initializing application...");
-    
-    // Step 1: Attempt to load ship data (essential for threat analysis, good to have early)
     await loadShipData(); 
     console.log("Ship data loading attempted.");
 
-    // Step 2: Check for saved state in URL and determine initial system
     let systemNameToLoad = "J121116"; // Default system
-    let isStateLoadPending = false;
+    let stateSuccessfullyPrepared = false; 
+    window.pendingLoadedState = null; // Ensure it's null initially
 
-    if (typeof loadAppStateFromUrl === 'function') {
-        const stateLoadAttempted = loadAppStateFromUrl(); // This will set window.pendingLoadedState if state exists
-        if (stateLoadAttempted && window.pendingLoadedState && window.pendingLoadedState.systemName) {
+    const urlParams = new URLSearchParams(window.location.search);
+    const mapIdFromQuery = urlParams.get('map_id');
+
+    if (mapIdFromQuery) {
+        // Priority 1: Try to load from short URL (map_id)
+        stateSuccessfullyPrepared = await fetchAndApplyStateFromServer(mapIdFromQuery);
+        if (stateSuccessfullyPrepared && window.pendingLoadedState && window.pendingLoadedState.systemName) {
             systemNameToLoad = window.pendingLoadedState.systemName;
-            isStateLoadPending = true;
-            console.log(`State found in URL. Will load system: ${systemNameToLoad} and then apply full state.`);
+            console.log(`State from ?map_id=${mapIdFromQuery} will be applied for system: ${systemNameToLoad}`);
         } else {
-            console.log("No valid state found in URL, or systemName missing in state. Loading default system.");
+            console.warn(`Failed to load state for ?map_id=${mapIdFromQuery}. Will try #state hash or default.`);
+            // Clear the bad map_id from URL so it doesn't retry on refresh
+             if (history.replaceState) {
+                const url = new URL(window.location);
+                url.searchParams.delete('map_id');
+                history.replaceState(null, '', url.pathname + url.search + url.hash);
+            }
         }
-    } else {
-        console.warn("loadAppStateFromUrl function is not defined. Proceeding with default system.");
+    }
+    
+    // Priority 2: If no map_id or it failed, try loading from old #state= hash
+    if (!stateSuccessfullyPrepared) { 
+        stateSuccessfullyPrepared = loadAppStateFromUrl(); // This sets window.pendingLoadedState
+        if (stateSuccessfullyPrepared && window.pendingLoadedState && window.pendingLoadedState.systemName) {
+            systemNameToLoad = window.pendingLoadedState.systemName;
+            console.log(`State from #state hash will be applied for system: ${systemNameToLoad}`);
+        }
     }
 
-    // Step 3: Fetch and render the determined system (either from URL state or default)
+    if (!stateSuccessfullyPrepared) {
+        console.log("No valid state found in URL. Loading default system:", systemNameToLoad);
+    }
+    
+    // Fetch and render the determined system
     if (typeof fetchAndRenderSystem === 'function') {
-        console.log(`Attempting to load and render system: ${systemNameToLoad}`);
-        await fetchAndRenderSystem(systemNameToLoad); // fetchAndRenderSystem is async
+        await fetchAndRenderSystem(systemNameToLoad.toUpperCase()); // Ensure system name is consistent case
         console.log(`Base map for ${systemNameToLoad} should be rendered.`);
 
-        // Step 4: If a state load was pending, apply the rest of it now
-        if (isStateLoadPending && typeof applyPendingLoadedState === 'function') {
-            applyPendingLoadedState(); // This re-adds markers, probe links, UI states etc.
-        } else if (isStateLoadPending) {
-            console.error("applyPendingLoadedState function is not defined. Cannot apply saved markers/UI.");
+        // If state was prepared (from either short URL or hash), apply it now
+        if (stateSuccessfullyPrepared && window.pendingLoadedState && typeof applyPendingLoadedState === 'function') {
+            applyPendingLoadedState();
+        } else if (stateSuccessfullyPrepared) {
+            console.error("applyPendingLoadedState function is not defined. Cannot apply saved state.");
         }
     } else { 
         console.error("fetchAndRenderSystem function is not defined! Initial map cannot be drawn.");
