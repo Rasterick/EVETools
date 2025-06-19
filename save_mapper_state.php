@@ -5,8 +5,7 @@ error_reporting(E_ALL);
 
 // save_scan.php
 header('Content-Type: application/json');
-//header('Access-Control-Allow-Origin: *'); // For local testing from file:/// or different dev domains. REMOVE/RESTRICT for production.
-header('Access-Control-Allow-Origin: https://gpi-services.co.uk'); 
+header('Access-Control-Allow-Origin: *'); // For local testing from file:/// or different dev domains. REMOVE/RESTRICT for production.
 header('Access-Control-Allow-Methods: POST, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type');
 
@@ -15,7 +14,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit(0);
 }
 
-require_once __DIR__ . '/config/config.php'; // $host, $db, $user, $pass, $charset
+require_once __DIR__ . '/config.php'; // $host, $db, $user, $pass, $charset
 
 // Function to generate a unique short ID
 function generateShortId($length = 8) {

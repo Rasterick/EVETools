@@ -1,10 +1,9 @@
 <?php
 // load_mapper_state.php
 header('Content-Type: application/json');
-//header('Access-Control-Allow-Origin: *'); // For development, restrict in production
-header('Access-Control-Allow-Origin: https://gpi-services.co.uk'); 
+header('Access-Control-Allow-Origin: *'); // For development, restrict in production
 
-require_once __DIR__ . '/config/config.php'; // $host, $db, $user, $pass, $charset
+require_once __DIR__ . '/config.php'; // $host, $db, $user, $pass, $charset
 
 $dsn = "mysql:host=$host;dbname=$db;charset=$charset";
 $options = [

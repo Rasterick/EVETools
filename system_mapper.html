@@ -31,7 +31,14 @@
   <main id="appGridContainer">
     <div id="mapWindow" class="grid-item">
       <div id="svgContainer">
-        <svg id="solarSystemSVG" preserveAspectRatio="xMidYMid meet"></svg>
+        <svg id="solarSystemSVG" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" 
+         xmlns:xlink="http://www.w3.org/1999/xlink">
+         <defs>
+           <symbol id="crossedSwordsIcon" viewBox="0 0 48 48">
+        <rect x="0" y="0" width="48" height="48" fill="magenta" stroke="black" stroke-width="1"/> 
+    </symbol>
+        </defs>
+        </svg>
       </div>
       <div id="infoBox"></div>
     </div>
@@ -179,6 +186,13 @@
       </div>
     </div>
 
+    <div id="killActivityPanel" class="grid-item"> 
+        <h2>Recent Kill Activity</h2>
+        <div id="killActivityListContent" class="scrollable-content-area"> 
+            
+        </div>
+        <button id="refreshKillDataButton" style="margin-top: auto; flex-shrink: 0;">Refresh Kills</button> 
+    </div>
 
     <div id="lootEstimationArea" class="grid-item">
       <h2>Add Custom Marker</h2>
@@ -213,14 +227,7 @@
       </div>
     </div>
 
-    <div id="systemInfoArea" class="grid-item">
-      <h2>System Information</h2>
-      <div id="systemDetailsBox">
-        <p><strong>Class:</strong> <span id="sysClass">N/A</span></p>
-        <p><strong>Effect:</strong> <span id="sysEffect">N/A</span></p>
-        <p><strong>Static 1:</strong> <span id="sysStatic1">N/A</span></p>
-        <p><strong>Static 2:</strong> <span id="sysStatic2">N/A</span></p>
-      </div>
+   
     </div>
   </main>
   <!-- Add this towards the end of your <body>, before the <script> tag for SolarSystem.js -->

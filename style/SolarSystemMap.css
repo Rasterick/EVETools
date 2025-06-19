@@ -109,7 +109,7 @@ body { display: flex; flex-direction: column; height: 100vh; }
         "map        scanInput   rightPanel"
         "map        buttons     rightPanel"
         "map        plotTable   rightPanel"  
-        "probeTable lootArea    sysInfoArea";
+        "probeTable kill_panel  sysInfoArea";
 
     gap: 8px; padding: 8px; flex-grow: 1; 
     width: 100%; max-width: 1800px; margin: 0 auto; 
@@ -145,7 +145,8 @@ body { display: flex; flex-direction: column; height: 100vh; }
     gap: 8px;
 } 
 #probeScanResultsArea { grid-area: probeTable; } 
-#lootEstimationArea { grid-area: lootArea; } 
+/*#lootEstimationArea { grid-area: lootArea; } */
+#killActivityPanel { grid-area: kill_panel; } 
 #systemInfoArea { grid-area: sysInfoArea; } 
 
 
@@ -698,3 +699,119 @@ body { display: flex; flex-direction: column; height: 100vh; }
     /* stroke is set by selected color in JS */
     /* stroke-width is set by selected color in JS */
 }
+
+.kill-cluster-count-label {
+    font-size: 8px; /* Small */
+    fill: #FFD700; /* Gold or bright color */
+    text-anchor: start;
+    dominant-baseline: middle;
+    font-weight: bold;
+}
+/* Style for the crossed swords icon if needed (fill, stroke) */
+#killMarkersGroup use { 
+    fill: red; /* Example fill for the icon itself */
+}
+
+#killActivityPanel #killActivityListContent {
+    flex-grow: 1;
+    overflow-y: auto;
+    /* Add padding, etc. as desired */
+}
+
+#killMarkersGroup use.kill-marker-icon { 
+    fill: #FF4444; /* Default red for kill icons */
+     stroke: #8B0000; /* Dark red border */
+     stroke-width: 0.5; 
+ }
+ #killMarkersGroup g:hover use.kill-marker-icon { /* Optional hover effect for icon */
+     fill: #FF6666;
+ }
+ .kill-cluster-count-label { 
+     font-size: 8px; /* Smaller for count */
+     fill: #FFFFFF; 
+     stroke: #000000;
+    stroke-width: 0.3px;
+    text-anchor: start; 
+     dominant-baseline: baseline;/* Position top-left of its x,y */
+     pointer-events: none; 
+}
+
+/* In SolarSystemMap.css */
+.kill-marker-cross-icon line {
+    stroke: #FF4444; /* Bright Red */
+    stroke-width: 1.5; /* ViewBox units */
+    stroke-linecap: round; /* Optional: makes line ends rounded */
+}
+
+#killMarkersGroup g:hover .kill-marker-cross-icon line { /* Optional hover effect for the cross */
+    stroke: #FF8888; /* Lighter red */
+}
+
+.kill-cluster-count-label { 
+    font-size: 8px; 
+    fill: #FFD700;  /* Bright Yellow */
+    stroke: black;
+    stroke-width: 0.25px; /* Thin black outline for text visibility */
+    text-anchor: start; 
+    dominant-baseline: middle;
+    font-weight: bold;
+    pointer-events: none; 
+}
+
+#killActivityPanel { /* This is a .grid-item, so it gets base styles */
+    /* It's already display:flex; flex-direction:column from .grid-item */
+}
+#killActivityPanel h2 { /* Already styled by .grid-item h2 */ }
+
+#killActivityPanel #killActivityListContent { /* Was .scrollable-content-area */
+    flex-grow: 1; /* Takes up available vertical space */
+    overflow-y: auto; /* Enables scrolling */
+    background-color: #101010; /* Dark background for the list area */
+    padding: 5px;
+    font-size: 11px;
+    line-height: 1.4;
+    min-height: 100px; /* Ensure it has some space */
+}
+#killActivityPanel #killActivityListContent ul {
+    list-style-type: none;
+    padding-left: 5px;
+    margin: 0;
+}
+#killActivityPanel #killActivityListContent li {
+    margin-bottom: 8px; /* Space between kill entries */
+    padding-bottom: 5px;
+    border-bottom: 1px dotted #333;
+}
+#killActivityPanel #killActivityListContent li:last-child {
+    border-bottom: none;
+}
+#killActivityPanel #killActivityListContent strong { /* For time or victim name */
+    color: #00A8FF; /* EVE Blue */
+}
+#killActivityPanel #killActivityListContent em { /* For "By:" */
+    color: #888;
+}
+#killActivityPanel #killActivityListContent a { /* ZKB Link */
+    color: #87CEFA;
+    text-decoration: none;
+}
+#killActivityPanel #killActivityListContent a:hover {
+    text-decoration: underline;
+}
+
+#killActivityPanel button#refreshKillDataButton {
+    margin-top: auto; /* Pushes to the bottom of the flex container */
+    flex-shrink: 0; /* Prevent button from shrinking */
+    padding: 6px 10px;
+    font-size: 12px;
+    /* Use your standard button styling */
+    background-color: #2a2d30; 
+    color: #00A8FF; 
+    border: 1px solid #101010; 
+    cursor: pointer;
+    align-self: center; /* Center button if panel is wider */
+    margin-bottom: 3px; /* Small space from bottom */
+    width: calc(100% - 10px); /* Slightly less than full width */
+    box-sizing: border-box;
+}
+#killActivityPanel button#refreshKillDataButton:hover { background-color: #3a3d40; }
