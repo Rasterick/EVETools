@@ -19,12 +19,41 @@
     </div>
 
     <div id="headerControlsWrapper"> 
-        <div id="systemSelectionControlsHeader">
+        <!-- <div id="systemSelectionControlsHeader">
             <input type="text" id="systemIdInput" placeholder="Enter System Name" />
             <button id="loadSystemButton">Load System</button>
+        </div> -->
+        <div class="autocomplete-container">
+        &nbsp; 
+        <label for="solarsysname">Select System:</label>
+        <input
+          type="text"
+          id="systemIdInput"
+          name="solarsysname"
+          list="systemNamesDatalist"
+          autocomplete="off"
+          placeholder="Start typing a system name..."
+        />
+        
+        <datalist id="systemNamesDatalist"></datalist>
         </div>
-
+        <button id="loadSystemButton">Load System</button>
         <button id="saveStateToUrlButton" title="Save current map state to a shareable URL">Save/Share State</button>
+
+      <button id="loadInstructions" onclick="launchHelp()">
+        Open Help
+      </button>
+
+    <script>
+        function launchHelp() {
+            // Define the properties of the popup window
+            const windowFeatures = 'width=1024,height=768,resizable=yes,scrollbars=yes,status=yes';
+            
+            // Open help.html in a new window
+            window.open('./help/help.html', 'WebAppHelp', windowFeatures);
+        }
+    </script>
+
     </div>
 </header>
 
@@ -257,6 +286,8 @@
     </div>
   </div>
   <script src="script/SolarSystem.js" defer></script>
+  <script src="script/systems.js" defer></script>
+  <script src="script/selectSystems.js" defer></script>
 </body>
 
 </html>

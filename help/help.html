@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Application Help</title>
+    <link rel="stylesheet" href="help-style.css" />
+  </head>
+  <body>
+    <div class="help-container">
+      <header class="help-header">
+        <h1>System Mapper Help</h1>
+      </header>
+
+      <main class="help-main">
+        <nav class="help-nav">
+          <!-- The navigation tree is built here. -->
+          <ul class="help-menu">
+            <li>
+              <a href="content/start.html" target="content-frame" class="active"
+                >Start Page</a
+              >
+            </li>
+            <li class="has-children">
+              <span class="toggle"></span
+              ><a href="content/introduction.html" target="content-frame"
+                >Introduction</a
+              >
+              <ul>
+                <li>
+                  <a href="content/prerequisites.html" target="content-frame"
+                    >Prerequisites</a
+                  >
+                </li>
+                <li>
+                  <a href="content/requirements.html" target="content-frame"
+                    >Requirements</a
+                  >
+                </li>
+                <li>
+                  <a href="content/concepts.html" target="content-frame"
+                    >Concepts</a
+                  >
+                </li>
+              </ul>
+            </li>
+            <li class="has-children">
+              <span class="toggle"></span
+              ><a href="content/operation.html" target="content-frame"
+                >Operation</a
+              >
+              <ul>
+                <li>
+                  <a href="content/trilateration.html" target="content-frame"
+                    >Trilateration Fundementals</a
+                  >
+                </li>
+                <li>
+                  <a href="content/screen-layout.html" target="content-frame"
+                    >Screen layout and Areas</a
+                  >
+                </li>
+                <li>
+                  <a href="content/controls.html" target="content-frame"
+                    >Controls</a
+                  >
+                </li>
+                <li>
+                  <a href="content/map-functions.html" target="content-frame"
+                    >Map Functions</a
+                  >
+                </li>
+                <li>
+                  <a href="content/dscan.html" target="content-frame">D Scan</a>
+                </li>
+                <li>
+                  <a href="content/probe-scan.html" target="content-frame"
+                    >Probes Scan</a
+                  >
+                </li>
+                <li>
+                  <a href="content/threat-analysis.html" target="content-frame"
+                    >Threat Analysis</a
+                  >
+                </li>
+                <li>
+                  <a href="content/custom-markers.html" target="content-frame"
+                    >Custom Markers</a
+                  >
+                </li>
+              </ul>
+            </li>
+            <li>
+              <a href="content/use-cases.html" target="content-frame"
+                >Use Cases</a
+              >
+            </li>
+            <li>
+              <a href="content/terminology.html" target="content-frame"
+                >Terminology</a
+              >
+            </li>
+            <li>
+              <a href="content/support.html" target="content-frame">Support</a>
+            </li>
+            <li class="has-children">
+              <span class="toggle"></span
+              ><a href="content/appendix-a.html" target="content-frame"
+                >Appendix A</a
+              >
+              <ul>
+                <li>
+                  <a href="content/future-features.html" target="content-frame"
+                    >Future Features</a
+                  >
+                </li>
+              </ul>
+            </li>
+          </ul>
+        </nav>
+
+        <article class="help-content">
+          <!-- The help content pages will be loaded into this iframe -->
+          <iframe name="content-frame" src="content/start.html"></iframe>
+        </article>
+      </main>
+
+      <footer class="help-footer">
+        <p>Copyright © 2025 Catskull Horizons [CTSKH] - Abon Riff</p>
+      </footer>
+    </div>
+
+    <script src="help-script.js"></script>
+  </body>
+</html>

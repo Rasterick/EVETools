@@ -1,0 +1,129 @@
+/* General Body and Layout Styling */
+body {
+    margin: 0;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 14px;
+    color: #333;
+}
+
+.help-container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh; /* Full viewport height */
+}
+
+/* Header Styling */
+.help-header {
+    background-color: #3a4d6b; /* Dark blue-grey from sample */
+    color: white;
+    padding: 10px 20px;
+    flex-shrink: 0;
+}
+
+.help-header h1 {
+    margin: 0;
+    font-size: 1.5em;
+    font-weight: normal;
+}
+
+/* Main Content Area (Nav + Article) */
+.help-main {
+    display: flex;
+    flex-grow: 1; /* Takes up remaining vertical space */
+    overflow: hidden; /* Prevents container from scrolling */
+}
+
+/* Left Navigation Panel */
+.help-nav {
+    width: 280px;
+    flex-shrink: 0;
+    background-color: #f0f2f5;
+    border-right: 1px solid #ccc;
+    overflow-y: auto; /* Allow scrolling if menu is long */
+    padding: 10px 0;
+}
+
+/* Right Content Panel */
+.help-content {
+    flex-grow: 1;
+    overflow-y: auto; /* Allows content to scroll */
+}
+
+.help-content iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+}
+
+/* Navigation Menu Tree Styling */
+.help-menu {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.help-menu li {
+    position: relative;
+}
+
+.help-menu a {
+    display: block;
+    padding: 8px 10px 8px 30px; /* Space for icon */
+    text-decoration: none;
+    color: #000;
+    border-bottom: 1px solid transparent; /* for alignment */
+}
+
+.help-menu a:hover {
+    background-color: #e0e8f0;
+}
+
+/* Active link style - red highlight from sample */
+.help-menu a.active {
+    background-color: #e21d1d;
+    color: white;
+    font-weight: bold;
+}
+
+/* Nested sub-menu styling */
+.help-menu ul {
+    list-style: none;
+    padding-left: 20px; /* Indent sub-items */
+    display: none; /* Hide sub-menus by default */
+}
+
+/* Style for parent items that are "open" */
+.help-menu li.open > ul {
+    display: block; /* Show sub-menu when parent is open */
+}
+
+/* Toggle +/- Icon */
+.has-children > .toggle {
+    position: absolute;
+    left: 10px;
+    top: 8px;
+    width: 12px;
+    height: 12px;
+    cursor: pointer;
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12"><rect x="5" y="1" width="2" height="10" fill="gray"/><rect x="1" y="5" width="10" height="2" fill="gray"/></svg>');
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+.open > .toggle {
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12"><rect x="1" y="5" width="10" height="2" fill="gray"/></svg>');
+}
+
+.has-children > a {
+    padding-left: 30px; /* Make space for toggle */
+}
+
+/* Footer Styling */
+.help-footer {
+    background-color: #e9e9e9;
+    padding: 5px 20px;
+    font-size: 0.8em;
+    text-align: right;
+    border-top: 1px solid #ccc;
+    flex-shrink: 0;
+}

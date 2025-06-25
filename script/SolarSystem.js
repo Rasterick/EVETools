@@ -3092,81 +3092,59 @@ document.addEventListener("DOMContentLoaded", () => {
     ); // Log 3
   }
 
-  function displayThreatShipSummary(shipSummaryData) {
+  function displayThreatShipSummary(aggregatedShipSummaryList) { // Parameter is the list of aggregated ships
     console.log(
-      "displayThreatShipSummary: Called with data (first 3 shown):",
-      JSON.parse(JSON.stringify(shipSummaryData.slice(0, 3)))
-    ); // Log 4
+      "displayThreatShipSummary: Called with AGGREGATED data (first 3 shown):",
+      JSON.parse(JSON.stringify(aggregatedShipSummaryList.slice(0, 3)))
+    ); 
 
-    if (!window.shipSummaryTableBody) {
-      console.error(
-        "displayThreatShipSummary: shipSummaryTableBody element not found!"
-      );
+    const tableBody = document.getElementById('shipSummaryTableBody'); // Get it directly
+    if (!tableBody) {
+      console.error("displayThreatShipSummary: shipSummaryTableBody element not found!");
       return;
     }
+    tableBody.innerHTML = ""; // Clear previous rows
 
-    shipSummaryTableBody.innerHTML = "";
-
-    if (shipSummaryData.length === 0) {
-      const row = shipSummaryTableBody.insertRow();
+    if (!aggregatedShipSummaryList || aggregatedShipSummaryList.length === 0) {
+      const row = tableBody.insertRow();
       const cell = row.insertCell();
-      cell.colSpan = 8; // Adjust to number of columns in your ship summary table
+      cell.colSpan = 7; // Number of columns in your Ship Summary table
       cell.textContent = "No specific ships identified or to summarize.";
       cell.style.textAlign = "center";
       return;
     }
 
-    // Aggregate ship counts before displaying
-    const aggregatedShips = {};
+    // The data is ALREADY aggregated, so just loop through it
+    aggregatedShipSummaryList.forEach((ship) => { 
+        const row = tableBody.insertRow();
+        // This log now uses the 'ship' object directly from the aggregated list
+        console.log(
+            "displayThreatShipSummary: Adding row for ship:",
+            ship.ship, // Should be "Prospect"
+            "Count:", 
+            ship.count // Should be 8 for Prospect in your example
+        ); 
+        
+        // Apply threat color if you have it
+        if (ship.threatColor) { /* ... */ }
 
-    shipSummaryData.forEach((ship) => {
-      const key = `${ship.ship}-${ship.pilotNotes || "N/A"}`; // Aggregate by ship and pilot/notes
-      if (!aggregatedShips[key]) {
-        aggregatedShips[key] = { ...ship, count: 0 };
-      }
-      aggregatedShips[key].count++;
-    });
+        row.insertCell().textContent = ship.count; // This is the aggregated count
+        const shipCell = row.insertCell();
+        if (ship.shipDetails && ship.shipDetails.URL) {
+            shipCell.innerHTML = `<a href="${escapeHtml(ship.shipDetails.URL)}" target="_blank">${escapeHtml(ship.ship)}</a>`;
+        } else {
+            shipCell.textContent = escapeHtml(ship.ship);
+        }
+        row.insertCell().textContent = escapeHtml(ship.shipClass);
+        row.insertCell().textContent = escapeHtml(ship.faction);
+        /* --- colour the cell cackground dependant up sensor type --- */
 
-    Object.values(aggregatedShips).forEach((ship) => {
-      // Iterate over aggregated ships
-      const row = shipSummaryTableBody.insertRow();
-      console.log(
-        "displayThreatShipSummary: Adding row for ship:",
-        ship.ship,
-        "Count:",
-        ship.count
-      ); // Log 5
-
-      // Apply threat color to row or specific cells
-      if (ship.threatColor) {
-        // Example: row.style.color = ship.threatColor; // Or apply to specific cells
-      }
-
-      row.insertCell().textContent = ship.count;
-      const shipCell = row.insertCell();
-      if (ship.shipDetails && ship.shipDetails.URL) {
-        shipCell.innerHTML = `<a href="${escapeHtml(
-          ship.shipDetails.URL
-        )}" target="_blank">${escapeHtml(ship.ship)}</a>`;
-      } else {
-        shipCell.textContent = escapeHtml(ship.ship);
-      }
-      row.insertCell().textContent = escapeHtml(ship.shipClass);
-      row.insertCell().textContent = escapeHtml(ship.faction);
-
-      const sensorCell = row.insertCell();
-      const sensorText = escapeHtml(ship.ecmSensor) || "Unknown"; // Default to "Unknown"
-      sensorCell.textContent = sensorText;
-
-      // --- APPLY SENSOR CLASS FOR BACKGROUND COLOR ---
-      sensorCell.classList.remove(
-        "sensor-radar",
-        "sensor-gravimetric",
-        "sensor-magnetometric",
-        "sensor-ladar",
-        "sensor-multisensor",
-        "sensor-unknown"
-      ); // Clear old
+        const sensorCell = row.insertCell();
+        const sensorText = escapeHtml(ship.ecmSensor) || "Unknown";
+        sensorCell.textContent = sensorText;
+        // Apply sensor class
+        sensorCell.classList.remove('sensor-radar', 'sensor-gravimetric', 'sensor-magnetometric', 'sensor-ladar', 'sensor-multisensor', 'sensor-unknown');
+       // This is where the logic needs to be precise
       if (sensorText.toLowerCase().includes("radar")) {
         sensorCell.classList.add("sensor-radar");
       } else if (sensorText.toLowerCase().includes("gravimetric")) {
@@ -3175,22 +3153,19 @@ document.addEventListener("DOMContentLoaded", () => {
         sensorCell.classList.add("sensor-magnetometric");
       } else if (sensorText.toLowerCase().includes("ladar")) {
         sensorCell.classList.add("sensor-ladar");
-      } else if (sensorText.toLowerCase().includes("multi")) {
-        // For "Multi Sensor"
+      } else if (sensorText.toLowerCase().includes("multi")) { // For "Multi Sensor" or "Multispectral"
         sensorCell.classList.add("sensor-multisensor");
       } else {
-        sensorCell.classList.add("sensor-unknown");
+        sensorCell.classList.add("sensor-unknown"); // Default if no match
       }
-      // --- END OF SENSOR CLASS ---
 
-      row.insertCell().textContent = escapeHtml(ship.tank);
-      row.insertCell().textContent = escapeHtml(ship.dps);
+        row.insertCell().textContent = escapeHtml(ship.tank);
+        row.insertCell().textContent = escapeHtml(ship.dps);
+        // Pilot/Notes column was removed
     });
 
-    console.log(
-      "displayThreatShipSummary: Finished populating ship summary table."
-    ); // Log 6
-  }
+    console.log("displayThreatShipSummary: Finished populating ship summary table with aggregated data.");
+}
 
   function displayUnlistedDScanEntries(unlistedEntriesData) {
     console.log(
@@ -3333,26 +3308,25 @@ document.addEventListener("DOMContentLoaded", () => {
         // For now, let's aggregate by effective ship name + specific pilot name (if present)
         // If pilotName is null or generic, they will group together.
         const pilotIdentifier = entity.pilotName || "N/A"; // Use "N/A" if no pilot, to group them
-        const aggregationKey = `${entity.itemName}_${pilotIdentifier}`;
+        const aggregationKey = entity.itemName;
 
-        if (!aggregatedShipData[aggregationKey]) {
-          const threat = assessThreat(entity.shipDetails, entity.pilotName);
-          aggregatedShipData[aggregationKey] = {
+         if (!aggregatedShipData[aggregationKey]) {
+        // We don't need to assess threat for each *instance* if we're just counting types.
+        // Threat assessment could be done once per *ship type* if desired, or removed from this summary.
+        // For simplicity, let's get basic details.
+        aggregatedShipData[aggregationKey] = {
             count: 0,
             ship: entity.itemName,
             shipClass: shipClass,
-            faction: entity.shipDetails["Faction Icon"] || "N/A",
-            ecmSensor: entity.shipDetails.Sensor || "N/A",
-            tank: entity.shipDetails.Tank || "N/A",
-            dps: entity.shipDetails.DPS || "N/A",
-            // Pilot/Notes: Use the parsed pilot name if available, otherwise from ship DB notes.
-            // The original D-Scan line's column 2 might also be relevant if not a ship type.
-            // pilotNotes: entity.pilotName || entity.shipDetails.Notes || (entity.rawLine.split('\t')[1] !== entity.itemName && entity.rawLine.split('\t')[1].trim() !== "-" ? entity.rawLine.split('\t')[1].trim() : ''),
-            threatCategory: threat.category,
-            threatColor: threat.color,
-            shipDetails: entity.shipDetails, // Keep for URL link
-          };
-        }
+            faction: entity.shipDetails["Faction Icon"] || 'N/A',
+            ecmSensor: entity.shipDetails.Sensor || 'N/A', 
+            tank: entity.shipDetails.Tank || 'N/A',
+            dps: entity.shipDetails.DPS || 'N/A',
+            // Notes can just be the generic ship notes from shipDatabase
+            notes: entity.shipDetails.Notes || '', 
+            shipDetails: entity.shipDetails // For URL link
+        };
+    }
         aggregatedShipData[aggregationKey].count++;
       }
     });

@@ -1,6 +1,6 @@
         body {
-            background-color: #1d1f21; 
-            color: #f8f8f2; 
+            background-color: #000B1A; 
+            color: #ADD8E6; 
             font-family: Arial, sans-serif;
             margin: 0;
             padding: 20px;
@@ -23,7 +23,7 @@
             display: flex;
             flex-direction: column;
             align-items: flex-start; 
-            background-color: rgba(40, 42, 54, 0.88); 
+            background-color: rgba(0, 11, 26, 0.88); 
             padding: 20px;
             border-radius: 8px;
             box-shadow: 0 0 15px rgba(0,0,0,0.5);
@@ -32,7 +32,7 @@
 
 
         h1, h2 {
-            color: #50fa7b; 
+            color: #ADD8E6; 
             margin-top: 20px;
             margin-bottom: 5px;
             align-self: flex-start; 
@@ -52,7 +52,7 @@
             min-height: 225px; 
             background-color: #ffffff;
             color: #000000;
-            border: 1px solid #6272a4; 
+            border: 1px solid #ADD8E6;
             border-radius: 5px;
             padding: 10px;
             font-size: 14px;
@@ -125,8 +125,8 @@
 
 
         button {
-            background-color: #0468BF; 
-            color: #05DBF2;
+            background-color: #04B2D9; 
+            color: #ADD8E6;
             border: none;
             border-radius: 8px;
             padding: 10px 20px;
@@ -140,7 +140,7 @@
         }
 
         button:hover {
-            background-color: #04B2D9; 
+            background-color: #04C2E9; 
         }
         
         button:active {
@@ -199,8 +199,8 @@
         }
 
         th {
-            background-color: #44475a; 
-            color: #f8f8f2; 
+            background-color: #000B1A; 
+            color: #ADD8E6; 
             font-weight: bold;
         }
 
@@ -239,5 +239,4 @@
         .sensor-magnetometric { background-color: #90EE90 !important; /* Pale Green */ }
         .sensor-ladar { background-color: #FFB6C1 !important; /* Light Red (LightPink) */ }
         .sensor-unknown { background-color: inherit; 
-	} 
-        
+	}

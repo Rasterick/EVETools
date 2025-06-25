@@ -96,10 +96,44 @@ body { display: flex; flex-direction: column; height: 100vh; }
     white-space: nowrap;
 }
 #appHeader #saveStateToUrlButton:hover {
-    background-color: #4a4d50;
+    background-color: #e50f16;
+    color: #FFFF66;
 }
 
 
+/* --- Main App Grid Container New Buttons --- */
+#appHeader #loadSystemButton {
+    padding: 6px 12px;
+    font-size: 12px;
+    cursor: pointer;
+    background-color: #3a3d40; /* Slightly different from load, or same as other panel buttons */
+    color: #00A8FF; /* EVE Blue text */
+    border: 1px solid #101010;
+    border-radius: 3px;
+    white-space: nowrap;
+}
+#appHeader #loadSystemButton:hover {
+    background-color: #4a4d50;
+}
+
+/*--- END ---*/
+
+/* --- Help Button --*/
+#appHeader #loadInstructions {
+    padding: 6px 12px;
+    font-size: 12px;
+    cursor: pointer;
+    background-color: #3a3d40; /* Slightly different from load, or same as other panel buttons */
+    color: #00A8FF; /* EVE Blue text */
+    border: 1px solid #101010;
+    border-radius: 3px;
+    white-space: nowrap;
+}
+#appHeader #loadInstructions:hover {
+    background-color: #4a4d50;
+}
+
+/* --- Help Button End --- */
 #appGridContainer {
     display: grid;
     grid-template-columns: minmax(600px, 2.5fr) minmax(220px, 1fr) minmax(350px, 1.5fr); 
@@ -462,9 +496,30 @@ body { display: flex; flex-direction: column; height: 100vh; }
     color: #c8c8c8;
     border: 1px solid #444;
 }
-#rightSidePanel .scan-details button#setDscanOriginButton {
+
+/* #rightSidePanel .scan-details button#setDscanOriginButton {
     font-size: 10px; padding: 2px 5px;
+} */
+
+/* --- Modified the button Styles to match the new theme --- */
+#rightSidePanel .scan-details button#setDscanOriginButton {
+    padding: 6px 12px;
+    font-size: 12px;
+    cursor: pointer;
+    background-color: #3a3d40; /* Slightly different from load, or same as other panel buttons */
+    color: #00A8FF; /* EVE Blue text */
+    border: 1px solid #101010;
+    border-radius: 3px;
+    white-space: nowrap;
 }
+#rightSidePanel .scan-details button#setDscanOriginButton:hover {
+    background-color: #4a4d50;
+}
+
+
+
+/* --- END ---*/
+
 
 
 #rightSidePanel .recon-ships-input {
@@ -815,3 +870,59 @@ body { display: flex; flex-direction: column; height: 100vh; }
     box-sizing: border-box;
 }
 #killActivityPanel button#refreshKillDataButton:hover { background-color: #3a3d40; }
+
+/* --- Added css for dropdown menu -----*/
+/* Container for the autocomplete */
+.autocomplete-container {
+  position: relative;
+  width: 300px;
+}
+
+/* Input field */
+#solarsysname {
+  width: 100%;
+  padding: 8px;
+  font-size: 16px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+/* Dropdown list */
+.autocomplete-list {
+  position: absolute;
+  border: 1px solid #ddd;
+  border-top: none;
+  border-radius: 0 0 4px 4px;
+  z-index: 99;
+  top: 100%;
+  left: 0;
+  right: 0;
+  max-height: 200px;
+  overflow-y: auto;
+  background-color: #fff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  display: none;
+}
+
+/* List items */
+.autocomplete-item {
+  padding: 8px 12px;
+  cursor: pointer;
+}
+
+.autocomplete-item:hover,
+.autocomplete-item.selected {
+  background-color: #f1f1f1;
+}
+
+/* Highlight matching text */
+.highlight {
+  font-weight: bold;
+  color: #2c7be5;
+}
+
+/* Invalid input styling */
+.invalid-input {
+  border-color: #dc3545;
+  background-color: #fff8f8;
+}

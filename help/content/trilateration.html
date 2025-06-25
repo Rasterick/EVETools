@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link rel="stylesheet" href="../page-style.css" />
+  </head>
+  <body>
+    <h1>Trilateration Fundementals</h1>
+       
+
+Trilateration is a method used to determine the location of an unknown point by measuring its distances from three or more known reference points. It's commonly used in GPS and other location-based technologies. The process involves finding the intersection of circles (in 2D) or spheres (in 3D) whose radii are the measured distances from the unknown point to the reference points. 
+</p>
+    <p>
+      Trilateration is a fundamental concept in navigation and positioning systems, allowing for accurate location determination based on distance measurements. It is distinct from triangulation, which uses angles rather than distances.
+    </p>
+    <img src="../../images/GPS-Trilateration-Feature.jpg" height="400" alt="Trilateration Diagram" class="centered-image" />
+<h2>Key Concepts:</h2>
+<h3>Reference Points:</h3>
+These are points with known locations. 
+<h4>Distances:</h4>
+<p>
+Trilateration relies on measuring the distances from the unknown point to each reference point. 
+Intersection:
+The intersection of the circles (or spheres) defined by these distances pinpoints the location of the unknown point. 
+</p>
+<img src="../../images/Schematic-diagram-of-trilateration.png" height="400" alt="Trilateration Diagram" class="centered-image" />
+<h4>2D vs. 3D:</h4>
+<p>
+In a 2D plane, three reference points are typically needed. In 3D space, at least four reference points are required for accurate positioning. In this application, we will be using 2D Trilateration, as the system map is a 2D representation of the system.
+</p>
+<h4>How it works:</h4>
+<P>
+    <ol>
+<li><h5>Measure Distances:</h5>
+The distances between the unknown point and each reference point are measured using various techniques, such as time-of-flight (ToF) or time difference of arrival (TDoA).</li> 
+
+</i>
+<li><h5>Construct Circles/Spheres:</h5>
+Each reference point acts as the center of a circle (in 2D) or sphere (in 3D) with a radius equal to the measured distance. </li>
+<li><h5>Find Intersection:</h5>
+The point where these circles (or spheres) intersect represents the location of the unknown point.</li> 
+Examples:
+GPS:
+</ol>
+<h5>Real World Use</h5>Global Positioning System (GPS) uses trilateration to determine a user's location on Earth. GPS satellites transmit signals that include their positions and the time the signals were sent. By measuring the time it takes for these signals to reach a GPS receiver, the receiver can calculate its distance from each satellite.
+GPS satellites act as reference points, and your GPS receiver measures the time it takes for signals to reach it from each satellite. This allows the receiver to calculate the distances and determine your location through trilateration. 
+    
+  </body>
+</html>

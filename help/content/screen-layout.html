@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link rel="stylesheet" href="../page-style.css" />
+  </head>
+  <body>
+    <h1>Screen Layout and Functions</h1>
+    <p>
+        <h2>Map Layout</h2>
+        <img src="../../images/SystemPage.jpg" alt="Screen Layout" width="750" />
+        <i>Fig 2.1 - System Mapper Screenshot</i>
+    </p>
+    <p>
+        The Screen is laid out into functional areas, most are self-explanatory, but some may need a little explanation. One area in particular that has multiple uses, is the Top-Middle Textarea. This area provides a place where the user can paste both D-Scan for treat analysis(Ships etc), D-Scan for Trilateration (Celestials) and Probe Scans. The buttons that initiate teir functionality is:
+        <ul>    
+            <li><b>Analyse Current D-Scan</b> - This button will take the ships from textarea and calculate and provide a D-Scan Analysis.</li>
+            <li><b>Parse D-Scan and Select Refs</b> - This button will take the D-Scan data from the textarea and calculate your location in space.</li>
+            <li><b>Probe Scan</b> - This button will take the Probe Scan data from the textarea and display it in the Probe Scan Results.</li>
+        </ul>
+        <i>Prior to pasting new scans into the text area, use the 'Clear Scan Text' button to clear the previous data. </i>
+        </p>
+        <h3>Map Area</h3>
+        <p>
+            <UL>
+                <li><b>Header Area</b><BR>Displays Current System, System Class, System Type Statics. To the right of this, are some system related controls: Select System text Box, Load System Button, Save and Share State Button and Help Pages Button</li>
+                <li><b>Map Area</b><BR>
+                Displays the current map of the system, Kill Locations (<b><font color = "red">+</font></b>),Custom Markers, Range Rings and 4AU Celestial Spawn areas</li>            
+                <li><b>Scan Paste TextArea</b><BR>This where the user can paste their D-SCan and Probe Scans for further analysis</li>
+                <li><b>Button And Control Araea</b><BR>Buttons for map and scan functionality</li>
+                <li><b>Plotted Locations</b>Displays plotted locations from Trilateration and Custom mmarkers. Items here can be linked to Probe Scans</li>
+                <li><b>Recent Kill Activity</b><BR>Displays a list of kills in system during the last 12 hours(to a max of 10 kills)</li>
+                <li><b>D-Scan Threat Analysis</b><BR>When activated displays a breakdown of ships scanned in system</li>
+                <li><b>Add Custom Markers</b><BR>Provides the user with an interface to add custom markers to the map</li>
+                
+
+            
+            
+            </UL>
+            The Map is a SVG area that displays the system and and user added content
+        </p>
+  </body>
+</html>

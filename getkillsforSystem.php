@@ -5,14 +5,14 @@ error_reporting(E_ALL);
 header('Content-Type: application/json');
 // header('Access-Control-Allow-Origin: *'); // If testing from different domain/port
 
-require 'config.php'; // Defines $host, $db, $user, $pass, $charset
+require 'db_config.php'; // Defines $host, $db, $user, $pass, $charset
 
 // --- Reusable cURL Function ---
 function fetchJsonFromUrl($url, $timeout = 10) {
     $ch = curl_init();
     curl_setopt($ch, CURLOPT_URL, $url);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_USERAGENT, 'YourAppName/1.0 (Contact: youremail@example.com)');
+    curl_setopt($ch, CURLOPT_USERAGENT, 'YourAppName/1.0 (Contact: abonriff@gmail.com)');
     curl_setopt($ch, CURLOPT_FAILONERROR, false); 
     curl_setopt($ch, CURLOPT_TIMEOUT, $timeout);
     // curl_setopt($ch, CURLOPT_ENCODING, ""); // If ESI sends gzipped often
@@ -110,13 +110,13 @@ $shipTypeNameCache = []; // For ship types from invtypes
 
 try {
     // --- Database Connection ---
-    $dsn = "mysql:host=$host;dbname=$db;charset=$charset";
+    $dsn = "mysql:host=$host;dbname=$dbname;charset=$charset";
     $options = [
         PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
         PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
         PDO::ATTR_EMULATE_PREPARES   => false,
     ];
-    $pdo = new PDO($dsn, $user, $pass, $options);
+    $pdo = new PDO($dsn, $username, $password, $options);
 
     // --- 1. Get solarSystemID from systemName ---
     $stmtSysId = $pdo->prepare("SELECT solarSystemID FROM solarsystems WHERE solarSystemName = :systemName LIMIT 1");
@@ -143,8 +143,8 @@ try {
     // --- 3. Process Killmails ---
     if (is_array($killmailSummaries)) {
         $killCounter = 0;
-        $maxKillsToProcess = 5; // Limit for now
-        $maxKillsToDisplay = 5;
+        $maxKillsToProcess = 10; // Limit for now
+        $maxKillsToDisplay = 10;
 
 
         foreach ($killmailSummaries as $summary) {
