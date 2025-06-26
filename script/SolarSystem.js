@@ -1842,6 +1842,7 @@ document.addEventListener("DOMContentLoaded", () => {
     let shapeElementToDrag;
     const baseSize = 6;
     const strokeWidthCustom = 1.5;
+    const strokeWidthCustomLMWD = .8;
 
     if (
       shapeType === "dscan_area" ||
@@ -1968,6 +1969,281 @@ document.addEventListener("DOMContentLoaded", () => {
           shapeElementToDrag.setAttribute("fill", color);
           break;
         }
+        /*---- Test of a few basic Shapes --- */
+        case "hexagon": {
+            shapeElementToDrag = document.createElementNS(SVG_NS, "polygon");
+            console.log("Creating hexagon shape with baseSize:", baseSize);
+
+            // Calculate points for a regular hexagon centered at (0,0) with 'baseSize' as radius/apothem
+            let points = "";
+            for (let i = 0; i < 6; i++) {
+                const angle = Math.PI / 3 * i - Math.PI / 6; // Start angle adjusted for flat top/bottom
+                const x = baseSize * Math.cos(angle);
+                const y = baseSize * Math.sin(angle);
+                points += `${x.toFixed(2)},${y.toFixed(2)} `;
+            }
+            shapeElementToDrag.setAttribute("points", points.trim());
+            shapeElementToDrag.setAttribute("fill", color);
+            break;
+          }
+          case "mobile warp disruptor": {
+            /* --Set the defaut colour of the mobile warp disruptor ---*/
+            let colorstroke = color;
+            let fillColor = "#FFFFFF";
+            shapeElementToDrag = document.createElementNS(SVG_NS, "circle");
+            console.log("Creating mobile warp disruptor shape with baseSize:", baseSize);
+            shapeElementToDrag.setAttribute("cx", "0");
+            shapeElementToDrag.setAttribute("cy", "0");
+            shapeElementToDrag.setAttribute("r", (baseSize / 0.37).toString());
+            shapeElementToDrag.setAttribute("y1", "0");
+            shapeElementToDrag.setAttribute("y2", "0");
+            shapeElementToDrag.setAttribute("opacity", "0.1"); // LMWD is semi-transparent
+            shapeElementToDrag.setAttribute("fill", fillColor);
+            shapeElementToDrag.setAttribute("stroke", colorstroke);
+            shapeElementToDrag.setAttribute("stroke-width", strokeWidthCustomLMWD.toString());
+            shapeElementToDrag.setAttribute("stroke-opacity", "80%"); // LMWD is opaque
+            break;
+          }
+          case "structure": {
+            shapeElementToDrag = document.createElementNS(SVG_NS, "g"); // Group for all paths
+            
+            console.log("Creating structure shape with baseSize:", baseSize);
+            // Path 1
+            const path1 = document.createElementNS(SVG_NS, "path");
+            path1.setAttribute("d", "M44.7,8.87c.52-8.79.34-7.11-6.51-7.1-12.03.03-24.05.22-36.08.35");
+            path1.setAttribute("fill", "none");
+            path1.setAttribute("stroke", color); // Use selected color
+            path1.setAttribute("stroke-linecap", "round");
+            path1.setAttribute("stroke-linejoin", "round");
+            path1.setAttribute("stroke-width", "4"); // This stroke-width is in the symbol's original scale
+            shapeElementToDrag.appendChild(path1);
+
+            //     // Path 2
+            const path2 = document.createElementNS(SVG_NS, "path");
+            path2.setAttribute("d", "M31.12,32.87c2.48,0,4.96-.03,7.44,0,1.6.02,2.9-.53,2.94-2.26.1-5,.04-10.01.04-15.19H4.34c0,5.06-.11,10.13.12,15.18.04.79,1.55,2.02,2.5,2.15,2.31.32,4.7.1,7.05.1");
+            path2.setAttribute("fill", "none");
+            path2.setAttribute("stroke", color); // Use selected color
+            path2.setAttribute("stroke-linecap", "round");
+            path2.setAttribute("stroke-linejoin", "round");
+            path2.setAttribute("stroke-width", "4");
+            shapeElementToDrag.appendChild(path2);
+
+            /// Path 3
+             const path3 = document.createElementNS(SVG_NS, "path");
+            path3.setAttribute("d", "M22.94,20.87v30.38");
+            path3.setAttribute("fill", "none");
+            path3.setAttribute("stroke", color); // Use selected color
+            path3.setAttribute("stroke-linecap", "round");
+            path3.setAttribute("stroke-linejoin", "round");
+            path3.setAttribute("stroke-width", "4");
+            shapeElementToDrag.appendChild(path3);
+
+                // Path 4
+            const path4 = document.createElementNS(SVG_NS, "path");
+            path4.setAttribute("d", "M1.74,1c-.25,2.75-.5,5.5-.74,8.25");
+            path4.setAttribute("fill", "none");
+            path4.setAttribute("stroke", color); // Use selected color
+            path4.setAttribute("stroke-linecap", "round");
+            path4.setAttribute("stroke-linejoin", "round");
+            path4.setAttribute("stroke-width", "4");
+            shapeElementToDrag.appendChild(path4);
+
+            // Now, you need to scale and center this group.
+            //     // The artwork is in a 0,0 to 45.88,52.25 box.
+            //     // To center it at (0,0) of the markerGroup, translate by (-width/2, -height/2)
+            //     // Then scale it down to your desired display size.
+            const nativeWidth = 45.88;
+            const nativeHeight = 52.25;
+            const desiredDisplayHeight = baseSize * 1.5; // e.g., 9
+            const scaleFactor = desiredDisplayHeight / nativeHeight;
+                
+            const translateX = (-nativeWidth / 2) * scaleFactor;
+            const translateY = (-nativeHeight / 2) * scaleFactor;
+
+            shapeElementToDrag.setAttribute("transform", `translate(${translateX}, ${translateY}) scale(${scaleFactor})`);
+
+            break;
+          }
+            case "wormhole": {
+            shapeElementToDrag = document.createElementNS(SVG_NS, "g"); // Group for all paths
+            
+            console.log("Creating structure shape with baseSize:", baseSize);
+            // Path 1
+            const path1 = document.createElementNS(SVG_NS, "path");
+            path1.setAttribute("d", "M21.35,6.91c-3.21-2.7-4.79-2.63-8.51.37");
+            path1.setAttribute("fill", "none");
+            path1.setAttribute("stroke", color); // Use selected color
+            path1.setAttribute("stroke-linecap", "round");
+            path1.setAttribute("stroke-linejoin", "round");
+            path1.setAttribute("stroke-width", "2"); // This stroke-width is in the symbol's original scale
+            shapeElementToDrag.appendChild(path1);
+
+            //     // Path 2
+            const path2 = document.createElementNS(SVG_NS, "path");
+            path2.setAttribute("d", "M1,6.54c.23,3.47,1.98,5.43,5.92,6.65");
+            path2.setAttribute("fill", "none");
+            path2.setAttribute("stroke", color); // Use selected color
+            path2.setAttribute("stroke-linecap", "round");
+            path2.setAttribute("stroke-linejoin", "round");
+            path2.setAttribute("stroke-width", "2");
+            shapeElementToDrag.appendChild(path2);
+
+            /// Path 3
+             const path3 = document.createElementNS(SVG_NS, "path");
+            path3.setAttribute("d", "M12.1,1c-2.79,1.53-4.89,3.53-4.81,7.02");
+            path3.setAttribute("fill", "none");
+            path3.setAttribute("stroke", color); // Use selected color
+            path3.setAttribute("stroke-linecap", "round");
+            path3.setAttribute("stroke-linejoin", "round");
+            path3.setAttribute("stroke-width", "2");
+            shapeElementToDrag.appendChild(path3);
+
+            // Path 4
+            const path4 = document.createElementNS(SVG_NS, "path");
+            path4.setAttribute("d", "M1.37,17.25c3.04,2.56,5.1,2.56,8.14,0");
+            path4.setAttribute("fill", "none");
+            path4.setAttribute("stroke", color); // Use selected color
+            path4.setAttribute("stroke-linecap", "round");
+            path4.setAttribute("stroke-linejoin", "round");
+            path4.setAttribute("stroke-width", "2");
+            shapeElementToDrag.appendChild(path4);
+
+            // Path 5
+            const path5 = document.createElementNS(SVG_NS, "path");
+            path5.setAttribute("d", "M21.72,16.88c-.53-3.08-2.61-5.16-5.92-5.91");
+            path5.setAttribute("fill", "none");
+            path5.setAttribute("stroke", color); // Use selected color
+            path5.setAttribute("stroke-linecap", "round");
+            path5.setAttribute("stroke-linejoin", "round");
+            path5.setAttribute("stroke-width", "2");
+            shapeElementToDrag.appendChild(path5);
+
+            // Path 6
+            const path6 = document.createElementNS(SVG_NS, "path");
+            path6.setAttribute("d", "M15.43,18.36c-1.2,2.42-2.43,4.81-5.55,5.17");
+            path6.setAttribute("fill", "none");
+            path6.setAttribute("stroke", color); // Use selected color
+            path6.setAttribute("stroke-linecap", "round");
+            path6.setAttribute("stroke-linejoin", "round");
+            path6.setAttribute("stroke-width", "2");
+            shapeElementToDrag.appendChild(path6);
+
+            // Now, you need to scale and center this group.
+            //     // The artwork is in a 0,0 to 45.88,52.25 box.
+            //     // To center it at (0,0) of the markerGroup, translate by (-width/2, -height/2)
+            //     // Then scale it down to your desired display size.
+            const nativeWidth = 7.31;
+            const nativeHeight = 7.949;
+            const desiredDisplayHeight = baseSize * .75; // e.g., 9
+            const scaleFactor = desiredDisplayHeight / nativeHeight;
+                
+            const translateX = (-nativeWidth / .6) * scaleFactor;
+            const translateY = (-nativeHeight / .6) * scaleFactor;
+
+            shapeElementToDrag.setAttribute("transform", `translate(${translateX}, ${translateY}) scale(${scaleFactor})`);
+
+            break;
+          }
+          case "bubbled wormhole": {
+            shapeElementToDrag = document.createElementNS(SVG_NS, "g"); // Group for all paths
+            
+            console.log("Creating structure shape with baseSize:", baseSize);
+            // Path 1
+            const path1 = document.createElementNS(SVG_NS, "path");
+            path1.setAttribute("d", "M21.35,6.91c-3.21-2.7-4.79-2.63-8.51.37");
+            path1.setAttribute("fill", "none");
+            path1.setAttribute("stroke", color); // Use selected color
+            path1.setAttribute("stroke-linecap", "round");
+            path1.setAttribute("stroke-linejoin", "round");
+            path1.setAttribute("stroke-width", "2"); // This stroke-width is in the symbol's original scale
+            shapeElementToDrag.appendChild(path1);
+
+            //     // Path 2
+            const path2 = document.createElementNS(SVG_NS, "path");
+            path2.setAttribute("d", "M1,6.54c.23,3.47,1.98,5.43,5.92,6.65");
+            path2.setAttribute("fill", "none");
+            path2.setAttribute("stroke", color); // Use selected color
+            path2.setAttribute("stroke-linecap", "round");
+            path2.setAttribute("stroke-linejoin", "round");
+            path2.setAttribute("stroke-width", "2");
+            shapeElementToDrag.appendChild(path2);
+
+            /// Path 3
+             const path3 = document.createElementNS(SVG_NS, "path");
+            path3.setAttribute("d", "M12.1,1c-2.79,1.53-4.89,3.53-4.81,7.02");
+            path3.setAttribute("fill", "none");
+            path3.setAttribute("stroke", color); // Use selected color
+            path3.setAttribute("stroke-linecap", "round");
+            path3.setAttribute("stroke-linejoin", "round");
+            path3.setAttribute("stroke-width", "2");
+            shapeElementToDrag.appendChild(path3);
+
+            // Path 4
+            const path4 = document.createElementNS(SVG_NS, "path");
+            path4.setAttribute("d", "M1.37,17.25c3.04,2.56,5.1,2.56,8.14,0");
+            path4.setAttribute("fill", "none");
+            path4.setAttribute("stroke", color); // Use selected color
+            path4.setAttribute("stroke-linecap", "round");
+            path4.setAttribute("stroke-linejoin", "round");
+            path4.setAttribute("stroke-width", "2");
+            shapeElementToDrag.appendChild(path4);
+
+            // Path 5
+            const path5 = document.createElementNS(SVG_NS, "path");
+            path5.setAttribute("d", "M21.72,16.88c-.53-3.08-2.61-5.16-5.92-5.91");
+            path5.setAttribute("fill", "none");
+            path5.setAttribute("stroke", color); // Use selected color
+            path5.setAttribute("stroke-linecap", "round");
+            path5.setAttribute("stroke-linejoin", "round");
+            path5.setAttribute("stroke-width", "2");
+            shapeElementToDrag.appendChild(path5);
+
+            // Path 6
+            const path6 = document.createElementNS(SVG_NS, "path");
+            path6.setAttribute("d", "M15.43,18.36c-1.2,2.42-2.43,4.81-5.55,5.17");
+            path6.setAttribute("fill", "none");
+            path6.setAttribute("stroke", color); // Use selected color
+            path6.setAttribute("stroke-linecap", "round");
+            path6.setAttribute("stroke-linejoin", "round");
+            path6.setAttribute("stroke-width", "2");
+            shapeElementToDrag.appendChild(path6);
+
+            // Now ad a bubble symbol to the center of the marker
+            let colorstroke = color;
+            let fillColor = "#FFFFFF";
+            const path7 = document.createElementNS(SVG_NS, "circle");
+            console.log("Creating mobile warp disruptor shape with baseSize:", baseSize);
+            path7.setAttribute("cx", "10.949");
+            path7.setAttribute("cy", "12.31");
+            path7.setAttribute("r", (baseSize / 0.17).toString());
+            //path7.setAttribute("y1", "2");
+            //path7.setAttribute("y2", "2");
+            path7.setAttribute("opacity", "0.1"); // LMWD is semi-transparent
+            path7.setAttribute("fill", fillColor);
+            path7.setAttribute("stroke", colorstroke);
+            path7.setAttribute("stroke-width", strokeWidthCustomLMWD.toString());
+            path7.setAttribute("stroke-opacity", "80%");  
+            shapeElementToDrag.appendChild(path7); 
+
+
+            // Now, you need to scale and center this group.
+            //     // The artwork is in a 0,0 to 45.88,52.25 box.
+            //     // To center it at (0,0) of the markerGroup, translate by (-width/2, -height/2)
+            //     // Then scale it down to your desired display size.
+            const nativeWidth = 7.31;
+            const nativeHeight = 7.949;
+            const desiredDisplayHeight = baseSize * .75; // e.g., 9
+            const scaleFactor = desiredDisplayHeight / nativeHeight;
+                
+            const translateX = (-nativeWidth / .6) * scaleFactor;
+            const translateY = (-nativeHeight / .6) * scaleFactor;
+
+            shapeElementToDrag.setAttribute("transform", `translate(${translateX}, ${translateY}) scale(${scaleFactor})`);
+
+            break;
+          }
+          /* ----- END of shap testing --- */
+
         case "circle": // Fallthrough for default
         default: {
           shapeElementToDrag = document.createElementNS(SVG_NS, "circle");
